@@ -1,0 +1,32 @@
+{
+  "builders": [
+    {
+      "type": "docker",
+      "image": "centos:centos7.2.1511",
+      "commit": true
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "scripts": [
+        "scripts/000-provision.sh"
+      ]
+    }
+  ],
+  "post-processors": [
+    [
+      {
+        "type": "docker-tag",
+        "repository": "advantageous/golang-cloud-watch",
+        "tag": "0.1"
+      },
+      {
+        "type": "docker-tag",
+        "repository": "advantageous/golang-cloud-watch",
+        "tag": "latest"
+      },
+      "docker-push"
+    ]
+  ]
+}
