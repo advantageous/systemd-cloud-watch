@@ -16,7 +16,7 @@ It remains a work in progress. It is not done yet.
 Improvements:
 
 * Added unit tests (there were none).
-* Added cross compile so I can develop/test on my laptop.
+* Added cross compile so I can develop/test on my laptop (MacOS).
 * Made logging stateless. No more need for a state file.
 * No more getting out of sync with CloudWatch.
 * Detects being out of sync and recovers.
