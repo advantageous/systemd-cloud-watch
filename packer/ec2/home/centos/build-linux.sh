@@ -21,4 +21,4 @@ go test -v github.com/RichardHightower/systemd-cloud-watch/cloud-watch
 echo "Renaming output to _linux"
 mv systemd-cloud-watch systemd-cloud-watch_linux
 
-pkill -9 systemd
+

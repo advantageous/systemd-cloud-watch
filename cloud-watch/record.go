@@ -3,6 +3,7 @@ package cloud_watch
 import (
 	"reflect"
 	"strconv"
+	"time"
 )
 
 type Priority int
@@ -72,6 +73,17 @@ func NewRecord(journal Journal, logger *Logger, config *Config) (*Record, error)
 	record := Record{}
 
 	err := decodeRecord(journal, reflect.ValueOf(&record).Elem(), logger, config)
+
+	if record.TimeUsec == 0 {
+
+		timestamp, err := journal.GetRealtimeUsec()
+		if err != nil {
+			logger.Error.Printf("Unable to read the time %s", err)
+			record.TimeUsec = time.Now().Unix() * 1000
+		} else {
+			record.TimeUsec = int64(timestamp)
+		}
+	}
 
 	return &record, err
 }

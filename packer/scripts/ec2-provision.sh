@@ -13,3 +13,5 @@ git clone https://github.com/RichardHightower/systemd-cloud-watch.git /gopath/sr
 
 
 
+sudo chown -R centos /gopath
+

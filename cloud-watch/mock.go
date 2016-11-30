@@ -53,7 +53,7 @@ func (journal *TestJournal) GetDataValue(field string) (string, error) {
 // GetRealtimeUsec gets the realtime (wallclock) timestamp of the current
 // journal entry.
 func (journal *TestJournal) GetRealtimeUsec() (uint64, error) {
-	return 1, nil
+	return 1480549576015541/1000, nil
 }
 
 // GetMonotonicUsec gets the monotonic timestamp of the current journal entry.
