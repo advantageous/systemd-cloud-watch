@@ -12,7 +12,7 @@ This is based on [advantageous journald-cloudwatch-logs](https://github.com/adva
 which was forked from [saymedia journald-cloudwatch-logs](https://github.com/saymedia/journald-cloudwatch-logs).
 
 ## Status 
-It remains a work in progress. 
+It remains a work in progress. It is not done yet.
 
 Improvements:
 
@@ -21,10 +21,12 @@ Improvements:
 * Made logging stateless. No more need for a state file. 
 * No more getting out of sync with CloudWatch. 
 * Detects being out of sync and recovers. 
-* Fixed error with log messages being too big
-* Created docker image and scripts to test on Linux (CentOS7)
-* Code organization (we use a packages)
-* Added comprehensive logging which includes debug logging by config
+* Fixed error with log messages being too big.
+* Created docker image and scripts to test on Linux (CentOS7).
+* Code organization (we use a packages).
+* Added comprehensive logging which includes debug logging by config.
+
+
 
 
 ## Log format
