@@ -5,7 +5,6 @@ The AWS logs agent copies data from on-disk text log files into [Cloudwatch](htt
 
 This utility reads from the systemd journal and sends the data in batches to Cloudwatch.
 
-The journal event data is written to Cloudwatch Logs in JSON format, making it amenable to filtering using the JSON filter syntax. Log records are translated to Cloudwatch JSON events using a structure like the following:
 
 ## Derived
 This is based on [advantageous journald-cloudwatch-logs](https://github.com/advantageous/journald-cloudwatch-logs)
