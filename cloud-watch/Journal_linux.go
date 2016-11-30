@@ -8,13 +8,27 @@ import (
 
 type SdJournal struct {
 	journal *sdjournal.Journal
+	logger *Logger
 }
 
-func NewJournal() (Journal, error) {
-	j, e := sdjournal.NewJournal()
-	return &SdJournal{
-		j,
-	}, e
+func NewJournal(config *Config) (Journal, error) {
+
+	logger := InitSimpleLog("journal", config)
+
+	if config==nil || config.JournalDir == "" {
+		journal, err := sdjournal.NewJournal()
+		return &SdJournal{
+			journal, logger,
+		}, err
+	} else {
+		logger.Info.Printf("using journal dir: %s", config.JournalDir)
+		journal, err := sdjournal.NewJournalFromDir(config.JournalDir)
+
+		return &SdJournal{
+			journal, logger,
+		}, err
+	}
+
 }
 
 func (journal *SdJournal) Close() error {
