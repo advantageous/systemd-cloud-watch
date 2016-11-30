@@ -1,0 +1,19 @@
+[Unit]
+Description=systemd-cloud-watch_linux
+Wants=basic.target
+After=basic.target network.target
+
+[Service]
+User=centos
+Group=centos
+ExecStart=/usr/bin/systemd-cloud-watch_linux /etc/journald-cloudwatch.conf
+KillMode=process
+Restart=on-failure
+RestartSec=42s
+
+
+[Install]
+WantedBy=getty.target
+
+
+

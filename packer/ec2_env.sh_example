@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+export ami=ami-YOURAMI
+export subnet=subnet-YOURSUBNET
+export security_group=sg-YOURSG
+export iam_profile=YOUR_IAM_ROLE
+export key_name=MY_PEM_FILE_KEY_NAME
+
+
+

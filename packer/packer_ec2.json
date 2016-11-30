@@ -1,0 +1,54 @@
+{
+  "variables": {
+    "aws_access_key": "",
+    "aws_secret_key": "",
+    "aws_region": "us-west-2",
+    "aws_ami_image": "ami-d2c924b2",
+    "aws_instance_type": "m4.large",
+    "image_version" : "0.4"
+  },
+  "builders": [
+    {
+      "type": "amazon-ebs",
+      "access_key": "{{user `aws_access_key`}}",
+      "secret_key": "{{user `aws_secret_key`}}",
+      "region": "{{user `aws_region`}}",
+      "source_ami": "{{user `aws_ami_image`}}",
+      "instance_type": "{{user `aws_instance_type`}}",
+      "ssh_username": "centos",
+      "ami_name": "centos-7-systemd-cloud-watch-{{user `image_version`}}",
+      "tags": {
+        "Name": "centos-7-systemd-cloud-watch-{{user `image_version`}}",
+        "OS_Version": "LinuxCentOs7",
+        "Release": "7",
+        "Description": "Base CentOs7 with prerequisites for go development for systemd cloud watch"
+      },
+      "user_data_file": "config/user-data.sh"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "file",
+      "source": "scripts/000-provision.sh",
+      "destination": "/home/centos/000-provision.sh"
+    },
+    {
+      "type": "file",
+      "source": "ec2/home/centos/",
+      "destination": "/home/centos"
+    },
+    {
+      "type": "shell",
+      "scripts": [
+        "scripts/ec2-provision.sh",
+        "scripts/040-logagent.sh"
+      ]
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "rm -fr /home/centos/etc"
+      ]
+    }
+  ]
+}
