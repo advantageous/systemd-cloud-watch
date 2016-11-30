@@ -331,12 +331,31 @@ cd packer
 packer build packer_docker.json
 ```
 
+We use the [docker](https://www.packer.io/docs/builders/docker.html) support for [packer](https://www.packer.io/).
+("Packer is a tool for creating machine and container images for multiple platforms from a single source configuration.")
+
 #### To run the dev image 
 ```sh
 # from project root
 cd packer
 ./run.sh
 
+```
+
+## Setting up a Linux env for testing/developing (CentOS7). 
+```sh
+yum -y install wget
+yum install -y git
+yum install -y gcc
+yum install -y systemd-devel
+
+
+echo "installing go"
+cd /tmp
+wget https://storage.googleapis.com/golang/go1.7.3.linux-amd64.tar.gz
+tar -C /usr/local/ -xzf go1.7.3.linux-amd64.tar.gz
+rm go1.7.3.linux-amd64.tar.gz
+echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bash_profile
 ```
 
 ## Licence
