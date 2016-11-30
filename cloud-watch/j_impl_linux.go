@@ -31,6 +31,7 @@ func NewJournal(config *Config) (Journal, error) {
 
 }
 
+
 func (journal *SdJournal) Close() error {
 	return journal.journal.Close()
 }
@@ -41,6 +42,7 @@ func (journal *SdJournal) Next() (uint64, error) {
 	loc, err := journal.journal.Next()
 	return loc, err
 }
+
 
 // NextSkip advances the read pointer by multiple entries at once,
 // as specified by the skip parameter.

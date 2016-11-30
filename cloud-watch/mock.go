@@ -6,9 +6,6 @@ type TestJournal struct {
 	values map[string]string
 }
 
-func NewJournal (config *Config) (Journal, error) {
-	return &TestJournal{}, nil
-}
 
 func NewJournaWithMap (values map[string]string) Journal {
 	return &TestJournal{values}
