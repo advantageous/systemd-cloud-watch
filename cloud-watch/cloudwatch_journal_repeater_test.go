@@ -3,6 +3,7 @@ package cloud_watch
 import (
 	"testing"
 	"time"
+	"strings"
 )
 
 func TestRepeater(t *testing.T) {
@@ -38,8 +39,12 @@ log_group="test-group"
 	err = repeater.WriteBatch(records)
 
 	if err != nil {
-		t.Errorf("Unable to write batch %s", err)
-		t.Fail()
+		if strings.Contains(err.Error(), "NoCredentialProviders") {
+			t.Skip("Skipping WriteBatch, you need to setup AWS credentials for this to work")
+		} else {
+			t.Errorf("Unable to write batch %s", err)
+			t.Fail()
+		}
 	}
 
 }
