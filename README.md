@@ -1,6 +1,6 @@
 # systemd-cloud-watch
 
-This is an alternative process to the AWS-provided logs agent. 
+This is an alternative process to the AWS-provided logs agent.
 The AWS logs agent copies data from on-disk text log files into [Cloudwatch](https://aws.amazon.com/cloudwatch/).
 
 This utility reads from the systemd journal and sends the data in batches to Cloudwatch.
@@ -11,27 +11,26 @@ The journal event data is written to Cloudwatch Logs in JSON format, making it a
 This is based on [advantageous journald-cloudwatch-logs](https://github.com/advantageous/journald-cloudwatch-logs)
 which was forked from [saymedia journald-cloudwatch-logs](https://github.com/saymedia/journald-cloudwatch-logs).
 
-## Status 
+## Status
 It remains a work in progress. It is not done yet.
 
 Improvements:
 
-* Added unit tests (there were none). 
+* Added unit tests (there were none).
 * Added cross compile so I can develop/test on my laptop.
-* Made logging stateless. No more need for a state file. 
-* No more getting out of sync with CloudWatch. 
-* Detects being out of sync and recovers. 
+* Made logging stateless. No more need for a state file.
+* No more getting out of sync with CloudWatch.
+* Detects being out of sync and recovers.
 * Fixed error with log messages being too big.
+* Added ability to include or omit logging fields.
 * Created docker image and scripts to test on Linux (CentOS7).
 * Code organization (we use a packages).
 * Added comprehensive logging which includes debug logging by config.
 
 
-
-
 ## Log format
 
-The journal event data is written to Cloudwatch Logs in JSON format, making it amenable to filtering using the JSON filter syntax. 
+The journal event data is written to Cloudwatch Logs in JSON format, making it amenable to filtering using the JSON filter syntax.
 Log records are translated to Cloudwatch JSON events using a structure like the following:
 
 #### Sample log
@@ -59,7 +58,7 @@ Log records are translated to Cloudwatch JSON events using a structure like the 
 }
 ```
 
-The JSON-formatted log events could also be exported into an AWS ElasticSearch instance using the ***CloudWatch*** 
+The JSON-formatted log events could also be exported into an AWS ElasticSearch instance using the ***CloudWatch***
 sync mechanism. Once in ElasticSearch, you can use an ELK stack to obtain more elaborate filtering and query capabilities.
 
 
@@ -91,14 +90,14 @@ The following configuration settings are supported:
 
 * `aws_region`: (Optional) The AWS region whose CloudWatch Logs API will be written to. If not provided,
   this defaults to the region where the host EC2 instance is running.
-  
+
 * `ec2_instance_id`: (Optional) The id of the EC2 instance on which the tool is running. There is very
   little reason to set this, since it will be automatically set to the id of the host EC2 instance.
 
 * `journal_dir`: (Optional) Override the directory where the systemd journal can be found. This is
   useful in conjunction with remote log aggregation, to work with journals synced from other systems.
   The default is to use the local system's journal.
-  
+
 * `log_group`: (Required) The name of the cloudwatch log group to write logs into. This log group must
   be created before running the program.
 
@@ -114,29 +113,29 @@ The following configuration settings are supported:
   the EC2 instance id. Each running instance of this application (along with any other applications
   writing logs into the same log group) must have a unique `log_stream` value. If the given log stream
   doesn't exist then it will be created before writing the first set of journal events.
-  
+
 * `state_file`: (Required) Path to a location where the program can write, and later read, some
   state it needs to preserve between runs. (The format of this file is an implementation detail.)
-  
+
 * `buffer_size`: (Optional) The size of the local event buffer where journal events will be kept
   in order to write batches of events to the CloudWatch Logs API. The default is 100. A batch of
   new events will be written to CloudWatch Logs every second even if the buffer does not fill, but
   this setting provides a maximum batch size to use when clearing a large backlog of events, e.g.
   from system boot when the program starts for the first time.
-  
+
 * `fields`: (Optional) Specifies which fields should be included in the JSON map that is sent to CloudWatch.
- 
+
 * `omit_fields`: (Optional) Specifies which fields should NOT be included in the JSON map that is sent to CloudWatch.
 
-* `field_length`: (Optional) Specifies how long string fileds can be in the JSON  map that is sent to CloudWatch. 
-   The default is 255 characters. 
- 
+* `field_length`: (Optional) Specifies how long string fileds can be in the JSON  map that is sent to CloudWatch.
+   The default is 255 characters.
+
 * `debug`: (Optional) Turns on debug logging.
 
 * `local`: (Optional) Used for unit testing. Will not try to create an AWS meta-data client to read region and AWS credentials.
 
 
-  
+
 ### AWS API access
 
 This program requires access to call some of the Cloudwatch API functions. The recommended way to
@@ -228,24 +227,24 @@ go test -v  github.com/RichardHightower/systemd-cloud-watch/cloud-watch
 
 #### Build and Test on Linux (Centos7)
 ```sh
- ./run_build_linux.sh 
+ ./run_build_linux.sh
 ```
 
-The above starts up a docker container, runs `go get`, `go build`, `go test` and then copies the binary to 
+The above starts up a docker container, runs `go get`, `go build`, `go test` and then copies the binary to
 `systemd-cloud-watch_linux`.
 
 #### Debug process running Linux
 ```sh
- ./run_test_container.sh 
+ ./run_test_container.sh
 ```
 
 
-The above starts up a docker container that you can develop with that has all the prerequisites needed to 
+The above starts up a docker container that you can develop with that has all the prerequisites needed to
 compile and test this project.
 
 #### Sample debug session
 ```sh
-$ ./run_test_container.sh 
+$ ./run_test_container.sh
 latest: Pulling from advantageous/golang-cloud-watch
 Digest: sha256:eaf5c0a387aee8cc2d690e1c5e18763e12beb7940ca0960ce1b9742229413e71
 Status: Image is up to date for advantageous/golang-cloud-watch:latest
@@ -293,7 +292,7 @@ aws INFO: 2016/11/30 08:53:34 aws.go:42: Config set to local
 aws INFO: 2016/11/30 08:53:34 aws.go:72: Client missing credentials not looked up
 aws INFO: 2016/11/30 08:53:34 aws.go:50: Client missing using config to set region
 aws INFO: 2016/11/30 08:53:34 aws.go:52: AWSRegion missing using default region us-west-2
-repeater ERROR: 2016/11/30 08:53:44 cloudwatch_journal_repeater.go:141: Error from putEvents NoCredentialProviders: no valid providers in chain. Deprecated. 
+repeater ERROR: 2016/11/30 08:53:44 cloudwatch_journal_repeater.go:141: Error from putEvents NoCredentialProviders: no valid providers in chain. Deprecated.
 	For verbose messaging see aws.Config.CredentialsChainVerboseErrors
 --- SKIP: TestRepeater (10.01s)
 	cloudwatch_journal_repeater_test.go:43: Skipping WriteBatch, you need to setup AWS credentials for this to work
@@ -336,7 +335,7 @@ packer build packer_docker.json
 We use the [docker](https://www.packer.io/docs/builders/docker.html) support for [packer](https://www.packer.io/).
 ("Packer is a tool for creating machine and container images for multiple platforms from a single source configuration.")
 
-#### To run the dev image 
+#### To run the dev image
 ```sh
 # from project root
 cd packer
@@ -344,7 +343,7 @@ cd packer
 
 ```
 
-## Setting up a Linux env for testing/developing (CentOS7). 
+## Setting up a Linux env for testing/developing (CentOS7).
 ```sh
 yum -y install wget
 yum install -y git
@@ -360,7 +359,34 @@ rm go1.7.3.linux-amd64.tar.gz
 echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bash_profile
 ```
 
-## Licence
+## Setting up Java to write to systemd journal
+
+#### gradle build
+```
+compile 'org.gnieh:logback-journal:0.2.0'
+
+```
+
+#### logback.xml
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <appender name="journal" class="org.gnieh.logback.SystemdJournalAppender" />
+
+    <root level="INFO">
+        <appender-ref ref="journal" />
+        <customFields>{"serviceName":"adfCalcBatch","serviceHost":"${HOST}"}</customFields>
+    </root>
+
+
+    <logger name="com.mycompany" level="INFO"/>
+
+</configuration>
+```
+
+
+## License
 
 Copyright (c) 2015 Say Media Inc
 
@@ -382,9 +408,5 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-All additional work is covered under Apache 2.0 license. 
+All additional work is covered under Apache 2.0 license.
 Copyright (c) 2016 Geoff Chandler, Rick Hightower
-
-
- 
- 
