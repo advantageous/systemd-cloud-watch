@@ -1,7 +1,7 @@
 # systemd-cloud-watch
 
 This is an alternative process to the AWS-provided logs agent. 
-The AWS logs agent copies data from on-disk text log files into [Cloudwatch](https://aws.amazon.com/cloudwatch/)*[]: 
+The AWS logs agent copies data from on-disk text log files into [Cloudwatch](https://aws.amazon.com/cloudwatch/).
 
 This utility reads from the systemd journal and sends the data in batches to Cloudwatch.
 
