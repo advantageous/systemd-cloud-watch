@@ -14,19 +14,19 @@ type Logger struct {
 	Error   *log.Logger
 }
 
-func InitSimpleLog(name string, config *Config) *Logger {
+func NewSimpleLogger(name string, config *Config) *Logger {
 
 	if (config == nil) {
-		return InitLog(name, os.Stdout, os.Stdout, os.Stdout, os.Stderr)
+		return NewLogger(name, os.Stdout, os.Stdout, os.Stdout, os.Stderr)
 	} else if config.Debug {
-		return InitLog(name, os.Stdout, os.Stdout, os.Stdout, os.Stderr)
+		return NewLogger(name, os.Stdout, os.Stdout, os.Stdout, os.Stderr)
 	} else {
-		return InitLog(name, ioutil.Discard, os.Stdout, os.Stdout, os.Stderr)
+		return NewLogger(name, ioutil.Discard, os.Stdout, os.Stdout, os.Stderr)
 	}
 
 }
 
-func InitLog(name string, traceHandle io.Writer, infoHandle io.Writer, warningHandle io.Writer, errorHandle io.Writer) *Logger {
+func NewLogger(name string, traceHandle io.Writer, infoHandle io.Writer, warningHandle io.Writer, errorHandle io.Writer) *Logger {
 
 	logger := Logger{
 	}

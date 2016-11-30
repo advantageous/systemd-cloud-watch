@@ -12,7 +12,7 @@ type SdJournal struct {
 
 func NewJournal(config *Config) (Journal, error) {
 
-	logger := InitSimpleLog("journal", config)
+	logger := NewSimpleLogger("journal", config)
 
 	if config == nil || config.JournalDir == "" {
 		journal, err := sdjournal.NewJournal()

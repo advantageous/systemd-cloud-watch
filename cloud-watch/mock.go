@@ -4,10 +4,11 @@ import "time"
 
 type TestJournal struct {
 	values map[string]string
+	times  int
 }
 
-func NewJournaWithMap(values map[string]string) Journal {
-	return &TestJournal{values}
+func NewJournalWithMap(values map[string]string) Journal {
+	return &TestJournal{values, 10}
 }
 
 func (journal *TestJournal) Close() error {
@@ -17,7 +18,12 @@ func (journal *TestJournal) Close() error {
 
 // Next advances the read pointer into the journal by one entry.
 func (journal *TestJournal) Next() (uint64, error) {
-	return 1, nil
+	journal.times--
+	if journal.times > 0 {
+		return 1, nil
+	} else {
+		return 0, nil
+	}
 }
 
 // NextSkip advances the read pointer by multiple entries at once,

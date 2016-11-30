@@ -25,8 +25,8 @@ var testMap = map[string]string{
 
 func TestNewRecord(t *testing.T) {
 
-	journal := NewJournaWithMap(testMap)
-	logger := InitSimpleLog("test", nil)
+	journal := NewJournalWithMap(testMap)
+	logger := NewSimpleLogger("test", nil)
 	data := `
 log_group="dcos-logstream-test"
 state_file="/var/lib/journald-cloudwatch-logs/state-test"
@@ -52,7 +52,7 @@ debug=true
 		t.Fail()
 	}
 
-	if record.TimeUsec != 1480459022025952 {
+	if record.TimeUsec != 1480459022025952 / 1000 {
 		t.Logf("Unable to read time stamp %d", record.TimeUsec)
 		t.Fail()
 	}
@@ -61,8 +61,8 @@ debug=true
 
 func TestLimitFields(t *testing.T) {
 
-	journal := NewJournaWithMap(testMap)
-	logger := InitSimpleLog("test", nil)
+	journal := NewJournalWithMap(testMap)
+	logger := NewSimpleLogger("test", nil)
 	data := `
 log_group="dcos-logstream-test"
 state_file="/var/lib/journald-cloudwatch-logs/state-test"
@@ -90,7 +90,7 @@ fields=["__REALTIME_TIMESTAMP"]
 		t.Fail()
 	}
 
-	if record.TimeUsec != 1480459022025952 {
+	if record.TimeUsec != 1480459022025952 / 1000 {
 		t.Logf("Unable to read time stamp %d", record.TimeUsec)
 		t.Fail()
 	}
@@ -99,8 +99,8 @@ fields=["__REALTIME_TIMESTAMP"]
 
 func TestOmitFields(t *testing.T) {
 
-	journal := NewJournaWithMap(testMap)
-	logger := InitSimpleLog("test", nil)
+	journal := NewJournalWithMap(testMap)
+	logger := NewSimpleLogger("test", nil)
 	data := `
 log_group="dcos-logstream-test"
 state_file="/var/lib/journald-cloudwatch-logs/state-test"
@@ -128,7 +128,7 @@ omit_fields=["_CMDLINE"]
 		t.Fail()
 	}
 
-	if record.TimeUsec != 1480459022025952 {
+	if record.TimeUsec != 1480459022025952 / 1000 {
 		t.Logf("Unable to read time stamp %d", record.TimeUsec)
 		t.Fail()
 	}

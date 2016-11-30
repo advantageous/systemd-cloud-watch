@@ -23,8 +23,9 @@ Improvements:
 * Fixed error with log messages being too big.
 * Added ability to include or omit logging fields.
 * Created docker image and scripts to test on Linux (CentOS7).
-* Code organization (we use a packages).
+* Code organization (we use a package).
 * Added comprehensive logging which includes debug logging by config.
+* Uses actual timestamp from journal log record instead of just current time
 
 
 ## Log format

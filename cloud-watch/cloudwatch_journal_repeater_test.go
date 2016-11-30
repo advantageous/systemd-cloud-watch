@@ -20,6 +20,7 @@ log_group="test-group"
 
 	config, _ := LoadConfigFromString(config_data, nil)
 	session := NewAWSSession(config)
+
 	repeater, err := NewCloudWatchJournalRepeater(session, nil, config)
 
 	if err != nil {

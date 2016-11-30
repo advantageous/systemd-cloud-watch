@@ -133,7 +133,7 @@ func decodeRecord(journal Journal, toVal reflect.Value, logger *Logger, config *
 				fieldVal.Set(reflect.Zero(fieldType))
 				continue
 			}
-			fieldVal.SetInt(u)
+			fieldVal.SetInt(u / 1000)
 			break
 
 		default:

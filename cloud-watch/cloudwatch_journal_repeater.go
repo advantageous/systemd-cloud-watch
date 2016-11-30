@@ -22,7 +22,7 @@ type CloudWatchJournalRepeater struct {
 func NewCloudWatchJournalRepeater(sess *awsSession.Session, logger *Logger, config *Config) (*CloudWatchJournalRepeater, error) {
 	conn := cloudwatchlogs.New(sess)
 	if logger == nil {
-		logger = InitSimpleLog("repeater", config)
+		logger = NewSimpleLogger("repeater", config)
 	}
 
 	return &CloudWatchJournalRepeater{
@@ -39,18 +39,20 @@ func (repeater *CloudWatchJournalRepeater) WriteBatch(records []Record) error {
 
 	events := make([]*cloudwatchlogs.InputLogEvent, 0, len(records))
 	for _, record := range records {
+
 		jsonDataBytes, err := json.MarshalIndent(record, "", "  ")
 		if err != nil {
 			return err
 		}
 		jsonData := string(jsonDataBytes)
 
+		logger.Info.Println(record.TimeUsec, jsonData)
+
 		events = append(events, &cloudwatchlogs.InputLogEvent{
 			Message:   aws.String(jsonData),
 			Timestamp: aws.Int64(int64(record.TimeUsec)),
 		})
 	}
-
 
 	putEvents := func() error {
 		request := &cloudwatchlogs.PutLogEventsInput{
@@ -66,10 +68,11 @@ func (repeater *CloudWatchJournalRepeater) WriteBatch(records []Record) error {
 			return err
 		}
 		repeater.nextSequenceToken = *result.NextSequenceToken
+
 		return nil
 	}
 
-	getNextToken:= func() error {
+	getNextToken := func() error {
 		limit := int64(1)
 		describeRequest := &cloudwatchlogs.DescribeLogStreamsInput{
 			LogGroupName:  &repeater.logGroupName,
@@ -86,7 +89,6 @@ func (repeater *CloudWatchJournalRepeater) WriteBatch(records []Record) error {
 			repeater.nextSequenceToken =
 				*describeOutput.LogStreams[0].UploadSequenceToken
 
-			logger.Info.Println(repeater.nextSequenceToken)
 			err = putEvents()
 			if err != nil {
 				return fmt.Errorf("failed to put events after sequence lookup: %s", err)
@@ -106,6 +108,14 @@ func (repeater *CloudWatchJournalRepeater) WriteBatch(records []Record) error {
 		return err
 	}
 
+	createLogGroup := func() error {
+		request := &cloudwatchlogs.CreateLogGroupInput{
+			LogGroupName:  &repeater.logGroupName,
+		}
+		_, err := repeater.conn.CreateLogGroup(request)
+		return err
+	}
+
 	if repeater.nextSequenceToken == "" {
 		getNextToken()
 	}
@@ -119,7 +129,21 @@ func (repeater *CloudWatchJournalRepeater) WriteBatch(records []Record) error {
 				// writing the events again.
 				err := createStream()
 				if err != nil {
-					return fmt.Errorf("failed to create stream: %s", err)
+					awsErr, ok = err.(awserr.Error)
+					//If you did not create the stream, then maybe you need to create the log group.
+					if awsErr.Code() == "ResourceNotFoundException" {
+						err = createLogGroup()
+						if err != nil {
+							return fmt.Errorf("failed to create log group: %s", err)
+						}
+						err = createStream()
+						if err != nil {
+							return fmt.Errorf("failed to create stream after log group: %s", err)
+						}
+
+					} else {
+						return fmt.Errorf("failed to create stream: %s", err)
+					}
 				}
 
 				err = putEvents()
@@ -129,17 +153,25 @@ func (repeater *CloudWatchJournalRepeater) WriteBatch(records []Record) error {
 				return nil
 			}
 			if awsErr.Code() == "DataAlreadyAcceptedException" {
-				// This batch was already
+				// This batch was already sent?
 				repeater.logger.Error.Printf("DataAlreadyAcceptedException from putEvents %s", err)
-				return getNextToken()
+				err = getNextToken()
+				if err != nil {
+					return fmt.Errorf("Next token failed after DataAlreadyAcceptedException : %s", err)
+				}
 			}
 			if awsErr.Code() == "InvalidSequenceTokenException" {
 				repeater.logger.Error.Printf("InvalidSequenceTokenException from putEvents %s", err)
-				return getNextToken()
+				err = getNextToken()
+				if err != nil {
+					return fmt.Errorf("Next token failed after InvalidSequenceTokenException : %s", err)
+				}
 			}
 		}
 		repeater.logger.Error.Printf("Error from putEvents %s", err)
 		return fmt.Errorf("failed to put events: %s", err)
+	} else {
+		logger.Info.Println("SENT SUCCESSFULLY")
 	}
 
 	return nil

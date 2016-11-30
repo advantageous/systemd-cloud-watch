@@ -34,7 +34,7 @@ func (config *Config) AllowField(fieldName string) bool {
 		_, omitField := config.omitFields[fieldName]
 		return !omitField
 	} else {
-		logger := InitSimpleLog("allow-field", config)
+		logger := NewSimpleLogger("allow-field", config)
 		logger.Warning.Println("Only fields or omit_fields should be set")
 		_, omitField := config.omitFields[fieldName]
 		if omitField {
@@ -60,7 +60,7 @@ func arrayToMap(array []string) map[string]struct{} {
 func LoadConfigFromString(data string, logger *Logger) (*Config, error) {
 
 	if logger == nil {
-		logger = InitSimpleLog("config", nil)
+		logger = NewSimpleLogger("config", nil)
 	}
 	config := &Config{}
 	logger.Debug.Println("Loading log...")

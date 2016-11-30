@@ -4,7 +4,7 @@ import "testing"
 
 func TestConfig(t *testing.T) {
 
-	logger := InitSimpleLog("test", nil)
+	logger := NewSimpleLogger("test", nil)
 
 	data := `
 log_group="dcos-logstream-test"
@@ -46,7 +46,7 @@ fields=["Foo", "Bar"]
 
 func TestLogOmitField(t *testing.T) {
 
-	logger := InitSimpleLog("test", nil)
+	logger := NewSimpleLogger("test", nil)
 
 	data := `omit_fields=["Foo", "Bar"]`
 	config, _ := LoadConfigFromString(data, logger)
