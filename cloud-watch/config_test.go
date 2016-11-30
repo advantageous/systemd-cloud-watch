@@ -15,7 +15,7 @@ fields=["Foo", "Bar"]
 	`
 	config, err := LoadConfigFromString(data, logger)
 
-	if err!=nil {
+	if err != nil {
 		t.Logf("Unable to parse config %s", err)
 		t.Fail()
 	}
@@ -31,7 +31,6 @@ fields=["Foo", "Bar"]
 	}
 
 	logger.Info.Println(config.AllowedFields)
-
 
 	if config.AllowedFields[0] != "Foo" {
 		t.Log("Field Value Foo not present")
@@ -51,7 +50,6 @@ func TestLogOmitField(t *testing.T) {
 
 	data := `omit_fields=["Foo", "Bar"]`
 	config, _ := LoadConfigFromString(data, logger)
-
 
 	if config.AllowField("Foo") {
 		t.Log("Field Value Foo should NOT allowed")

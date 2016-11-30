@@ -1,33 +1,31 @@
 package cloud_watch
 
-
 import "testing"
 
 func TestNewJournal(t *testing.T) {
 
-	j,e := NewJournal(nil)
+	j, e := NewJournal(nil)
 
-	if e!=nil {
+	if e != nil {
 		t.Fail()
 	}
 
-	if j==nil {
+	if j == nil {
 		t.Fail()
 	}
 
 	e = j.Close()
 
-	if e!=nil {
+	if e != nil {
 		t.Fail()
 	}
 
 }
 
-
 func TestSdJournal_Operations(t *testing.T) {
-	j,e := NewJournal(nil)
+	j, e := NewJournal(nil)
 
-	if e!=nil {
+	if e != nil {
 		t.Fail()
 	}
 

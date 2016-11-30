@@ -15,23 +15,22 @@ type Config struct {
 	JournalDir    string `hcl:"journal_dir"`
 	BufferSize    int    `hcl:"buffer_size"`
 	Debug         bool    `hcl:"debug"`
+	Local         bool    `hcl:"local"`
 	AllowedFields []string `hcl:"fields"`
-	OmitFields []string `hcl:"omit_fields"`
-	fields map[string]struct{}
-	omitFields map[string]struct{}
-	FieldLength    int    `hcl:"field_length"`
-
+	OmitFields    []string `hcl:"omit_fields"`
+	fields        map[string]struct{}
+	omitFields    map[string]struct{}
+	FieldLength   int    `hcl:"field_length"`
 }
 
 func (config *Config) AllowField(fieldName string) bool {
 
-
-	if len (config.AllowedFields) == 0 && len(config.OmitFields) == 0{
+	if len(config.AllowedFields) == 0 && len(config.OmitFields) == 0 {
 		return true
-	} else if len (config.AllowedFields) > 0 && len(config.OmitFields) == 0 {
+	} else if len(config.AllowedFields) > 0 && len(config.OmitFields) == 0 {
 		_, hasField := config.fields[fieldName]
 		return hasField
-	} else if len (config.AllowedFields) == 0 && len(config.OmitFields) > 0 {
+	} else if len(config.AllowedFields) == 0 && len(config.OmitFields) > 0 {
 		_, omitField := config.omitFields[fieldName]
 		return !omitField
 	} else {
@@ -48,17 +47,21 @@ func (config *Config) AllowField(fieldName string) bool {
 	}
 }
 
-func arrayToMap(array []string )map[string]struct{} {
+func arrayToMap(array []string) map[string]struct{} {
 	theMap := make(map[string]struct{})
-	if array!=nil && len(array) > 0 {
-		for _,element := range array {
-			theMap[element]= struct {}{}
+	if array != nil && len(array) > 0 {
+		for _, element := range array {
+			theMap[element] = struct{}{}
 		}
 	}
 	return theMap
 }
 
 func LoadConfigFromString(data string, logger *Logger) (*Config, error) {
+
+	if logger == nil {
+		logger = InitSimpleLog("config", nil)
+	}
 	config := &Config{}
 	logger.Debug.Println("Loading log...")
 	err := hcl.Decode(&config, data)

@@ -2,7 +2,11 @@ package cloud_watch
 
 import "time"
 
-
+type JournalRepeater interface {
+	// Close closes a journal opened with NewJournal.
+	Close() error;
+	WriteBatch(records []Record) error;
+}
 
 type Journal interface {
 	// Close closes a journal opened with NewJournal.
