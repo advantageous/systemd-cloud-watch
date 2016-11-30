@@ -26,6 +26,7 @@ Improvements:
 * Code organization (we use a package).
 * Added comprehensive logging which includes debug logging by config.
 * Uses actual timestamp from journal log record instead of just current time
+* Auto-creates log group if it does not exist
 
 
 ## Log format
