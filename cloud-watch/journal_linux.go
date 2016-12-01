@@ -37,7 +37,7 @@ func (journal *SdJournal) AddLogFilters(config *Config) {
 	// Add Priority Filters
 	if config.GetJournalDLogPriority() < DEBUG {
 		for p, _ := range PriorityJsonMap {
-			if p <= config.LogPriority {
+			if p <= config.GetJournalDLogPriority() {
 				journal.journal.AddMatch("PRIORITY=" + strconv.Itoa(int(p)))
 			}
 		}
