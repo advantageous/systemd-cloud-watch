@@ -386,6 +386,19 @@ compile 'org.gnieh:logback-journal:0.2.0'
 </configuration>
 ```
 
+## Commands for controlling systemd service EC2 dev env
+
+```sh
+# Get status
+sudo systemctl status journald-cloudwatch
+# Stop Service
+sudo systemctl stop journald-cloudwatch
+# Find the service
+ps -ef | grep cloud
+# Run service manually
+/usr/bin/systemd-cloud-watch_linux /etc/journald-cloudwatch.conf
+
+```
 
 ## License
 

@@ -81,7 +81,7 @@ func NewRecord(journal Journal, logger *Logger, config *Config) (*Record, error)
 			logger.Error.Printf("Unable to read the time %s", err)
 			record.TimeUsec = time.Now().Unix() * 1000
 		} else {
-			record.TimeUsec = int64(timestamp)
+			record.TimeUsec = int64(timestamp / 1000)
 		}
 	}
 

@@ -46,7 +46,6 @@ func (repeater *CloudWatchJournalRepeater) WriteBatch(records []Record) error {
 		}
 		jsonData := string(jsonDataBytes)
 
-		logger.Info.Println(record.TimeUsec, jsonData)
 
 		events = append(events, &cloudwatchlogs.InputLogEvent{
 			Message:   aws.String(jsonData),
