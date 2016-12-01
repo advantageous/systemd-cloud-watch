@@ -333,16 +333,55 @@ cd packer
 packer build packer_docker.json
 ```
 
-We use the [docker](https://www.packer.io/docs/builders/docker.html) support for [packer](https://www.packer.io/).
-("Packer is a tool for creating machine and container images for multiple platforms from a single source configuration.")
 
-#### To run the dev image
+#### To run docker dev image
 ```sh
 # from project root
 cd packer
 ./run.sh
 
 ```
+
+#### Building the ec2 image with packer to build the linux instance to build this project
+
+```sh
+# from project root
+cd packer
+packer build packer_ec2.json
+```
+
+We use the [docker](https://www.packer.io/docs/builders/docker.html) support for [packer](https://www.packer.io/).
+("Packer is a tool for creating machine and container images for multiple platforms from a single source configuration.")
+
+Use `ec2_env.sh_example` to create a `ec2_env.sh` with the instance id that was just created. 
+
+#### ec2_env.sh_example
+```
+#!/usr/bin/env bash
+export ami=ami-YOURAMI
+export subnet=subnet-YOURSUBNET
+export security_group=sg-YOURSG
+export iam_profile=YOUR_IAM_ROLE
+export key_name=MY_PEM_FILE_KEY_NAME
+
+```
+
+##### Using EC2 image (assumes you have ~/.ssh config setup)
+```sh
+# from project root
+cd packer
+
+# Run and log into dev env running in EC2
+./runEc2Dev.sh
+
+# Log into running server
+./loginIntoEc2Dev.sh
+
+```
+
+
+
+
 
 ## Setting up a Linux env for testing/developing (CentOS7).
 ```sh
