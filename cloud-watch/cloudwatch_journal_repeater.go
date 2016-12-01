@@ -115,6 +115,37 @@ func (repeater *CloudWatchJournalRepeater) WriteBatch(records []Record) error {
 		return err
 	}
 
+	recoverResourceNotFound := func(awsErr awserr.Error) error {
+		// Maybe our log stream doesn't exist yet. We'll try
+		// to create it and then, if we're successful, try
+		// writing the events again.
+		err := createStream()
+		if err != nil {
+			awsErr, _ = err.(awserr.Error)
+			//If you did not create the stream, then maybe you need to create the log group.
+			if awsErr.Code() == "ResourceNotFoundException" {
+				err = createLogGroup()
+				if err != nil {
+					return fmt.Errorf("failed to create log group: %s", err)
+				}
+				err = createStream()
+				if err != nil {
+					return fmt.Errorf("failed to create stream after log group: %s", err)
+				}
+
+			} else {
+				return fmt.Errorf("failed to create stream: %s", err)
+			}
+		}
+
+		err = putEvents()
+		if err != nil {
+			return fmt.Errorf("failed to put events: %s", err)
+		}
+		return nil
+
+	}
+
 	if repeater.nextSequenceToken == "" {
 		getNextToken()
 	}
@@ -123,33 +154,10 @@ func (repeater *CloudWatchJournalRepeater) WriteBatch(records []Record) error {
 	if err != nil {
 		if awsErr, ok := err.(awserr.Error); ok {
 			if awsErr.Code() == "ResourceNotFoundException" {
-				// Maybe our log stream doesn't exist yet. We'll try
-				// to create it and then, if we're successful, try
-				// writing the events again.
-				err := createStream()
-				if err != nil {
-					awsErr, ok = err.(awserr.Error)
-					//If you did not create the stream, then maybe you need to create the log group.
-					if awsErr.Code() == "ResourceNotFoundException" {
-						err = createLogGroup()
-						if err != nil {
-							return fmt.Errorf("failed to create log group: %s", err)
-						}
-						err = createStream()
-						if err != nil {
-							return fmt.Errorf("failed to create stream after log group: %s", err)
-						}
-
-					} else {
-						return fmt.Errorf("failed to create stream: %s", err)
-					}
+				err = recoverResourceNotFound(awsErr)
+				if err!=nil {
+					return err
 				}
-
-				err = putEvents()
-				if err != nil {
-					return fmt.Errorf("failed to put events: %s", err)
-				}
-				return nil
 			}
 			if awsErr.Code() == "DataAlreadyAcceptedException" {
 				// This batch was already sent?
@@ -170,7 +178,9 @@ func (repeater *CloudWatchJournalRepeater) WriteBatch(records []Record) error {
 		repeater.logger.Error.Printf("Error from putEvents %s", err)
 		return fmt.Errorf("failed to put events: %s", err)
 	} else {
-		logger.Info.Println("SENT SUCCESSFULLY")
+		if (repeater.config.Debug) {
+			logger.Info.Println("SENT SUCCESSFULLY")
+		}
 	}
 
 	return nil

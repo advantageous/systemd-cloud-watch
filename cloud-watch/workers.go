@@ -201,7 +201,9 @@ func RunWorkers(configFilename string, logger *Logger) error {
 	repeater, err := NewCloudWatchJournalRepeater(session, nil, config)
 
 	for batch := range batches {
-		logger.Info.Printf("Writing records %s", len(batch))
+		if (config.Debug) {
+			logger.Info.Printf("Writing records %d", len(batch))
+		}
 		err := repeater.WriteBatch(batch)
 		if err != nil {
 			return fmt.Errorf("Failed to write to cloudwatch: %s", err)
