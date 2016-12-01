@@ -179,7 +179,7 @@ func (repeater *CloudWatchJournalRepeater) WriteBatch(records []Record) error {
 		return fmt.Errorf("failed to put events: %s", err)
 	} else {
 		if (repeater.config.Debug) {
-			logger.Info.Println("SENT SUCCESSFULLY")
+			repeater.logger.Info.Println("SENT SUCCESSFULLY")
 		}
 	}
 

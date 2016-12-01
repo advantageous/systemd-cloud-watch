@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 )
 
-var logger = NewSimpleLogger("aws", nil)
+var awsLogger = NewSimpleLogger("aws", nil)
 
 
 func NewAWSSession(cfg *Config) *awsSession.Session {
@@ -36,11 +36,11 @@ func NewAWSSession(cfg *Config) *awsSession.Session {
 
 func getClient(config *Config) (*ec2metadata.EC2Metadata, *awsSession.Session) {
 	if !config.Local {
-		logger.Debug.Println("Config NOT set to local using meta-data client to find local")
+		awsLogger.Debug.Println("Config NOT set to local using meta-data client to find local")
 		var session = awsSession.New(&aws.Config{})
 		return ec2metadata.New(session), session
 	} else {
-		logger.Info.Println("Config set to local")
+		awsLogger.Info.Println("Config set to local")
 		return nil, nil
 	}
 }
@@ -48,9 +48,9 @@ func getClient(config *Config) (*ec2metadata.EC2Metadata, *awsSession.Session) {
 func getRegion(client *ec2metadata.EC2Metadata, config *Config, session *awsSession.Session) string {
 
 	if client == nil {
-		logger.Info.Println("Client missing using config to set region")
+		awsLogger.Info.Println("Client missing using config to set region")
 		if config.AWSRegion == "" {
-			logger.Info.Println("AWSRegion missing using default region us-west-2")
+			awsLogger.Info.Println("AWSRegion missing using default region us-west-2")
 			return "us-west-2"
 		} else {
 			return config.AWSRegion
@@ -58,14 +58,14 @@ func getRegion(client *ec2metadata.EC2Metadata, config *Config, session *awsSess
 	} else {
 		region, err := client.Region()
 		if err != nil {
-			logger.Error.Printf("Unable to get region from aws meta client %s", err)
+			awsLogger.Error.Printf("Unable to get region from aws meta client %s", err)
 			os.Exit(3)
 		}
 
 		config.AWSRegion = region
 		config.EC2InstanceId, err = client.GetMetadata("instance-id")
 		if err != nil {
-			logger.Error.Printf("Unable to get instance id from aws meta client %s", err)
+			awsLogger.Error.Printf("Unable to get instance id from aws meta client %s", err)
 			os.Exit(4)
 		}
 
@@ -74,7 +74,7 @@ func getRegion(client *ec2metadata.EC2Metadata, config *Config, session *awsSess
 			az = findAZ(client)
 			name = findInstanceName(config.EC2InstanceId, config.AWSRegion, session)
 			config.LogStreamName = name + "-" + config.EC2InstanceId + "-" + az
-			logger.Info.Printf("LogStreamName was not set so using %s \n", config.LogStreamName)
+			awsLogger.Info.Printf("LogStreamName was not set so using %s \n", config.LogStreamName)
 		}
 
 
@@ -87,7 +87,7 @@ func getCredentials(client *ec2metadata.EC2Metadata) *awsCredentials.Credentials
 
 
 	if client == nil {
-		logger.Info.Printf("Client missing credentials not looked up")
+		awsLogger.Info.Printf("Client missing credentials not looked up")
 		return nil
 	} else {
 		return awsCredentials.NewChainCredentials([]awsCredentials.Provider{
@@ -105,7 +105,7 @@ func findAZ(metaClient *ec2metadata.EC2Metadata) (string) {
 	az, err := metaClient.GetMetadata("placement/availability-zone")
 
 	if err != nil {
-		logger.Error.Printf("Unable to get az from aws meta client %s", err)
+		awsLogger.Error.Printf("Unable to get az from aws meta client %s", err)
 		os.Exit(5)
 	}
 
@@ -129,7 +129,7 @@ func findInstanceName(instanceId string, region string, session *awsSession.Sess
 	resp, err := ec2Service.DescribeInstances(params)
 
 	if err != nil {
-		logger.Error.Printf("Unable to get instance name tag DescribeInstances failed %s", err)
+		awsLogger.Error.Printf("Unable to get instance name tag DescribeInstances failed %s", err)
 		return name
 	}
 
@@ -143,11 +143,11 @@ func findInstanceName(instanceId string, region string, session *awsSession.Sess
 				}
 			}
 		}
-		logger.Error.Printf("Unable to get find name tag ")
+		awsLogger.Error.Printf("Unable to get find name tag ")
 		return name
 
 	} else {
-		logger.Error.Printf("Unable to get find name tag ")
+		awsLogger.Error.Printf("Unable to get find name tag ")
 		return name
 	}
 }
