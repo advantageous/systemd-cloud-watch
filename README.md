@@ -11,7 +11,8 @@ This is based on [advantageous journald-cloudwatch-logs](https://github.com/adva
 which was forked from [saymedia journald-cloudwatch-logs](https://github.com/saymedia/journald-cloudwatch-logs).
 
 ## Status
-It remains a work in progress. It is not done yet.
+It is close to being done. 
+
 
 Improvements:
 
