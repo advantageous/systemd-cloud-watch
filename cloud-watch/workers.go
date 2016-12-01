@@ -168,6 +168,7 @@ func RunWorkers(configFilename string, logger *Logger) error {
 	}
 
 	journal, err := NewJournal(config)
+	journal.AddLogFilters(config)
 
 	if err != nil {
 		logger.Error.Println("Unable to load journal %s", err)

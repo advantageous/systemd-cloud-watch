@@ -35,6 +35,8 @@ type Journal interface {
 	// journal entry.
 	GetRealtimeUsec() (uint64, error);
 
+ 	AddLogFilters(config *Config)
+
 	// GetMonotonicUsec gets the monotonic timestamp of the current journal entry.
 	GetMonotonicUsec() (uint64, error);
 

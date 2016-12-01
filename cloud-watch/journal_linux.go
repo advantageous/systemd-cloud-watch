@@ -3,6 +3,7 @@ package cloud_watch
 import (
 	"time"
 	"github.com/coreos/go-systemd/sdjournal"
+	"strconv"
 )
 
 type SdJournal struct {
@@ -28,6 +29,20 @@ func NewJournal(config *Config) (Journal, error) {
 		}, err
 	}
 
+}
+
+
+func (journal *SdJournal) AddLogFilters(config *Config) {
+
+	// Add Priority Filters
+	if config.GetJournalDLogPriority() < DEBUG {
+		for p, _ := range PriorityJSON {
+			if p <= config.LogPriority {
+				journal.journal.AddMatch("PRIORITY=" + strconv.Itoa(int(p)))
+			}
+		}
+		journal.journal.AddDisjunction()
+	}
 }
 
 func (journal *SdJournal) Close() error {

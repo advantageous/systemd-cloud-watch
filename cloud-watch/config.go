@@ -11,16 +11,38 @@ type Config struct {
 	LogGroupName  string `hcl:"log_group"`
 	LogStreamName string `hcl:"log_stream"`
 	LogPriority   string `hcl:"log_priority"`
-	StateFilename string `hcl:"state_file"`
 	JournalDir    string `hcl:"journal_dir"`
 	BufferSize    int    `hcl:"buffer_size"`
 	Debug         bool    `hcl:"debug"`
 	Local         bool    `hcl:"local"`
 	AllowedFields []string `hcl:"fields"`
 	OmitFields    []string `hcl:"omit_fields"`
+	logPriority   int
 	fields        map[string]struct{}
 	omitFields    map[string]struct{}
 	FieldLength   int    `hcl:"field_length"`
+}
+
+func (config *Config) GetJournalDLogPriority() (Priority) {
+
+	logLevels := map[Priority][]string{
+		EMERGENCY: {"0", "emerg"},
+		ALERT:     {"1", "alert"},
+		CRITICAL:  {"2", "crit"},
+		ERROR:     {"3", "err"},
+		WARNING:   {"4", "warning"},
+		NOTICE:    {"5", "notice"},
+		INFO:      {"6", "info"},
+		DEBUG:     {"7", "debug"},
+	}
+
+	for i, s := range logLevels {
+		if s[0] == config.LogPriority || s[1] == config.LogPriority {
+			return i
+		}
+	}
+
+	return DEBUG
 }
 
 func (config *Config) AllowField(fieldName string) bool {
@@ -70,6 +92,18 @@ func LoadConfigFromString(data string, logger *Logger) (*Config, error) {
 	}
 	config.fields = arrayToMap(config.AllowedFields)
 	config.omitFields = arrayToMap(config.OmitFields)
+
+	if config.BufferSize == 0 {
+		logger.Debug.Println("Loading log... BufferSize not set, setting to 10")
+		config.BufferSize = 10
+	}
+
+
+	if config.LogPriority == "" {
+		logger.Debug.Println("Loading log... LogPriority not set, setting to debug")
+		config.LogPriority = "debug"
+	}
+
 	return config, nil
 
 }

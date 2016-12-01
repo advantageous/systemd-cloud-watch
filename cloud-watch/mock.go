@@ -56,6 +56,10 @@ func (journal *TestJournal) GetRealtimeUsec() (uint64, error) {
 	return 1480549576015541/1000, nil
 }
 
+func (journal *TestJournal) AddLogFilters(config *Config) {
+
+}
+
 // GetMonotonicUsec gets the monotonic timestamp of the current journal entry.
 func (journal *TestJournal) GetMonotonicUsec() (uint64, error) {
 	return 1, nil
