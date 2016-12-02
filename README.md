@@ -75,9 +75,8 @@ This tool uses `libsystemd` to access the journal. systemd-based distributions g
 with this already installed, but if yours doesn't you must manually install the library somehow before
 this tool will work.
 
-There are instructions on how to install the Linux requirements for development below see (Setting up a Linux env for testing/developing (CentOS7)).
-
-[My link](#user-content-build-and-test-on-linux-centos7) 
+There are instructions on how to install the Linux requirements for development below see - [Setting up a Linux env for testing/developing (CentOS7)](#setting-up-a-linux-env-for-testingdeveloping-centos7).
+ 
 
 ## Configuration
 
