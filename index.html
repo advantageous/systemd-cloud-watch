@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>Systemd-cloud-watch by advantageous</title>
+    <title>Systemd Journal Cloud Watch by advantageous</title>
 
     <link rel="stylesheet" href="stylesheets/styles.css">
     <link rel="stylesheet" href="stylesheets/github-dark.css">
@@ -17,8 +17,8 @@
   <body>
     <div class="wrapper">
       <header>
-        <h1>Systemd-cloud-watch</h1>
-        <p>systemd-cloud-watch</p>
+        <h1>Systemd Journal Cloud Watch</h1>
+        <p>Alt util like AWS cloudwatch agent that works with systemd journal and sends the data in batches to AWS cloudwatch.</p>
         <p class="view"><a href="https://github.com/advantageous/systemd-cloud-watch">View the Project on GitHub <small>advantageous/systemd-cloud-watch</small></a></p>
         <ul>
           <li><a href="https://github.com/advantageous/systemd-cloud-watch/zipball/master">Download <strong>ZIP File</strong></a></li>
@@ -28,41 +28,18 @@
       </header>
       <section>
         <h1>
-<a id="systemd-cloud-watch" class="anchor" href="#systemd-cloud-watch" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>systemd-cloud-watch</h1>
+<a id="systemd-cloud-watch-journal-writer" class="anchor" href="#systemd-cloud-watch-journal-writer" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Systemd Cloud Watch Journal Writer</h1>
+
+<p>This utility reads from the <a href="https://www.freedesktop.org/software/systemd/man/systemd-journald.service.html">systemd journal</a>,
+ and sends the data in batches to <a href="https://aws.amazon.com/cloudwatch/">Cloudwatch</a>.</p>
 
 <p>This is an alternative process to the AWS-provided logs agent.
-The AWS logs agent copies data from on-disk text log files into <a href="https://aws.amazon.com/cloudwatch/">Cloudwatch</a>.</p>
+The AWS logs agent copies data from on-disk text log files into <a href="https://aws.amazon.com/cloudwatch/">Cloudwatch</a>.
+This utility <code>systemd-cloud-watch</code> reads the <code>systemd journal</code> and writes that data in batches to CloudWatch.</p>
 
-<p>This utility reads from the systemd journal and sends the data in batches to Cloudwatch.</p>
-
-<h2>
-<a id="derived" class="anchor" href="#derived" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Derived</h2>
-
-<p>This is based on <a href="https://github.com/advantageous/journald-cloudwatch-logs">advantageous journald-cloudwatch-logs</a>
-which was forked from <a href="https://github.com/saymedia/journald-cloudwatch-logs">saymedia journald-cloudwatch-logs</a>.</p>
-
-<h2>
-<a id="status" class="anchor" href="#status" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Status</h2>
-
-<p>It is close to being done. </p>
-
-<p>Improvements:</p>
-
-<ul>
-<li>Added unit tests (there were none).</li>
-<li>Added cross compile so I can develop/test on my laptop (MacOS).</li>
-<li>Made logging stateless. No more need for a state file.</li>
-<li>No more getting out of sync with CloudWatch.</li>
-<li>Detects being out of sync and recovers.</li>
-<li>Fixed error with log messages being too big.</li>
-<li>Added ability to include or omit logging fields.</li>
-<li>Created docker image and scripts to test on Linux (CentOS7).</li>
-<li>Created EC2 image and scripts to test on Linux running in AWS EC2 (CentOS7).</li>
-<li>Code organization (we use a package).</li>
-<li>Added comprehensive logging which includes debug logging by config.</li>
-<li>Uses actual timestamp from journal log record instead of just current time</li>
-<li>Auto-creates CloudWatch log group if it does not exist</li>
-</ul>
+<p>There are other ways to do this using various techniques. But depending on the size of log messages and size of the core parts
+these other methods are fragile. This utility allows you cap the log field size, include only the fields that you want, or
+exclude the fields you don't want. We find that this is not only useful but essential. </p>
 
 <h2>
 <a id="log-format" class="anchor" href="#log-format" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Log format</h2>
@@ -458,6 +435,35 @@ ps -ef <span class="pl-k">|</span> grep cloud
 <span class="pl-c"># Run service manually</span>
 /usr/bin/systemd-cloud-watch_linux /etc/journald-cloudwatch.conf
 </pre></div>
+
+<h2>
+<a id="derived" class="anchor" href="#derived" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Derived</h2>
+
+<p>This is based on <a href="https://github.com/advantageous/journald-cloudwatch-logs">advantageous journald-cloudwatch-logs</a>
+which was forked from <a href="https://github.com/saymedia/journald-cloudwatch-logs">saymedia journald-cloudwatch-logs</a>.</p>
+
+<h2>
+<a id="status" class="anchor" href="#status" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Status</h2>
+
+<p>It is close to being done. </p>
+
+<p>Improvements:</p>
+
+<ul>
+<li>Added unit tests (there were none).</li>
+<li>Added cross compile so I can develop/test on my laptop (MacOS).</li>
+<li>Made logging stateless. No more need for a state file.</li>
+<li>No more getting out of sync with CloudWatch.</li>
+<li>Detects being out of sync and recovers.</li>
+<li>Fixed error with log messages being too big.</li>
+<li>Added ability to include or omit logging fields.</li>
+<li>Created docker image and scripts to test on Linux (CentOS7).</li>
+<li>Created EC2 image and scripts to test on Linux running in AWS EC2 (CentOS7).</li>
+<li>Code organization (we use a package).</li>
+<li>Added comprehensive logging which includes debug logging by config.</li>
+<li>Uses actual timestamp from journal log record instead of just current time</li>
+<li>Auto-creates CloudWatch log group if it does not exist</li>
+</ul>
 
 <h2>
 <a id="license" class="anchor" href="#license" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>License</h2>
