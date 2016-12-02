@@ -8,7 +8,8 @@ The AWS logs agent copies data from on-disk text log files into [Cloudwatch](htt
 This utility `systemd-cloud-watch` reads the `systemd journal` and writes that data in batches to CloudWatch.
 
 There are other ways to do this using various techniques. But depending on the size of log messages and size of the core parts
-these other methods are fragile. This utility allows you cap the log field size, include only the fields that you want, or
+these other methods are fragile as AWS CloudWatch limits the size of the messages. 
+This utility allows you cap the log field size, include only the fields that you want, or
 exclude the fields you don't want. We find that this is not only useful but essential. 
 
 
