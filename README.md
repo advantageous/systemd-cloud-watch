@@ -75,8 +75,15 @@ This tool uses `libsystemd` to access the journal. systemd-based distributions g
 with this already installed, but if yours doesn't you must manually install the library somehow before
 this tool will work.
 
-There are instructions on how to install the Linux requirements for development below see - [Setting up a Linux env for testing/developing (CentOS7)](#setting-up-a-linux-env-for-testingdeveloping-centos7).
- 
+There are instructions on how to install the Linux requirements for development below see - 
+[Setting up a Linux env for testing/developing (CentOS7)](#setting-up-a-linux-env-for-testingdeveloping-centos7).
+
+We also have two excellent examples of setting up a dev environment using [packer](https://www.packer.io/) for both 
+[AWS EC2](#building-the-ec2-image-with-packer-to-build-the-linux-instance-to-build-this-project) and 
+[Docker](#building-the-docker-image-to-build-the-linux-instance-to-build-this-project). We setup CentoOS 7.
+The EC2 instance packer build uses the ***aws command line*** to create and connect to a running image. 
+These should be instructive for how to setup this utility in your environment to run with ***systemd*** as we provide
+all of the systemd scripts in the packer provision scripts for EC2.  An example is good. A running example is better.
 
 ## Configuration
 
