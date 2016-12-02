@@ -1,4 +1,4 @@
-# Systemd Cloud Watch Journal Writer
+# Systemd Journal Cloud Watch Writer
 
 This utility reads from the [systemd journal](https://www.freedesktop.org/software/systemd/man/systemd-journald.service.html),
  and sends the data in batches to [Cloudwatch](https://aws.amazon.com/cloudwatch/).
