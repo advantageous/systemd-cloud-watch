@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 docker pull advantageous/golang-cloud-watch:latest
-docker run -it --name build -v `pwd`:/gopath/src/github.com/RichardHightower/systemd-cloud-watch \
+docker run -it --name build -v `pwd`:/gopath/src/github.com/advantageous/systemd-cloud-watch \
 advantageous/golang-cloud-watch \
-/bin/sh -c "/gopath/src/github.com/RichardHightower/systemd-cloud-watch/build_linux.sh"
+/bin/sh -c "/gopath/src/github.com/advantageous/systemd-cloud-watch/build_linux.sh"
 docker rm build

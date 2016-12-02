@@ -224,7 +224,7 @@ to *promptly* capture startup messages.
 
 #### Test cloud-watch package
 ```sh
-go test -v  github.com/RichardHightower/systemd-cloud-watch/cloud-watch
+go test -v  github.com/advantageous/systemd-cloud-watch/cloud-watch
 ```
 
 
@@ -251,12 +251,12 @@ $ ./run_test_container.sh
 latest: Pulling from advantageous/golang-cloud-watch
 Digest: sha256:eaf5c0a387aee8cc2d690e1c5e18763e12beb7940ca0960ce1b9742229413e71
 Status: Image is up to date for advantageous/golang-cloud-watch:latest
-[root@6e0d1f984c03 /]# cd gopath/src/github.com/RichardHightower/systemd-cloud-watch/
+[root@6e0d1f984c03 /]# cd gopath/src/github.com/advantageous/systemd-cloud-watch/
 .git/                      README.md                  cloud-watch/               packer/                    sample.conf                
 .gitignore                 build_linux.sh             main.go                    run_build_linux.sh         systemd-cloud-watch.iml    
 .idea/                     cgroup/                    output.json                run_test_container.sh      systemd-cloud-watch_linux  
 
-[root@6e0d1f984c03 /]# cd gopath/src/github.com/RichardHightower/systemd-cloud-watch/
+[root@6e0d1f984c03 /]# cd gopath/src/github.com/advantageous/systemd-cloud-watch/
 
 [root@6e0d1f984c03 systemd-cloud-watch]# ls
 README.md  build_linux.sh  cgroup  cloud-watch  main.go  output.json  packer  run_build_linux.sh  
@@ -288,7 +288,7 @@ Running go build
 [root@6e0d1f984c03 systemd-cloud-watch]# echo "Running go test"
 Running go test
 
-[root@6e0d1f984c03 systemd-cloud-watch]# go test -v github.com/RichardHightower/systemd-cloud-watch/cloud-watch
+[root@6e0d1f984c03 systemd-cloud-watch]# go test -v github.com/advantageous/systemd-cloud-watch/cloud-watch
 === RUN   TestRepeater
 config DEBUG: 2016/11/30 08:53:34 config.go:66: Loading log...
 aws INFO: 2016/11/30 08:53:34 aws.go:42: Config set to local
@@ -321,7 +321,7 @@ test DEBUG: 2016/11/30 08:53:44 config.go:66: Loading log...
 test DEBUG: 2016/11/30 08:53:44 config.go:66: Loading log...
 --- PASS: TestOmitFields (0.00s)
 PASS
-ok  	github.com/RichardHightower/systemd-cloud-watch/cloud-watch	10.017s
+ok  	github.com/advantageous/systemd-cloud-watch/cloud-watch	10.017s
 ```
 
 

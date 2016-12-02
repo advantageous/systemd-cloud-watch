@@ -1,7 +1,7 @@
 package main
 
 import (
-	jcw  "github.com/RichardHightower/systemd-cloud-watch/cloud-watch"
+	jcw  "github.com/advantageous/systemd-cloud-watch/cloud-watch"
 	"flag"
 	"os"
 )

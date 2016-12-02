@@ -4,7 +4,7 @@ set -e
 echo Install log agent -------------------------------
 mkdir /tmp/logagent
 cd /tmp/logagent
-curl -OL https://github.com/RichardHightower/systemd-cloud-watch/releases/download/v0.0.1-prerelease/systemd-cloud-watch_linux
+curl -OL https://github.com/advantageous/systemd-cloud-watch/releases/download/v0.0.1-prerelease/systemd-cloud-watch_linux
 sudo mv systemd-cloud-watch_linux /usr/bin
 sudo chmod +x  /usr/bin/systemd-cloud-watch_linux
 sudo mkdir -p  /var/lib/journald-cloudwatch-logs/
