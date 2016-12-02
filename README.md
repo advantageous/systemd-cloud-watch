@@ -1,34 +1,15 @@
-# systemd-cloud-watch
+# Systemd Cloud Watch Journal Writer
 
+This utility reads from the [systemd journal](https://www.freedesktop.org/software/systemd/man/systemd-journald.service.html),
+ and sends the data in batches to [Cloudwatch](https://aws.amazon.com/cloudwatch/).
+ 
 This is an alternative process to the AWS-provided logs agent.
 The AWS logs agent copies data from on-disk text log files into [Cloudwatch](https://aws.amazon.com/cloudwatch/).
+This utility `systemd-cloud-watch` reads the `systemd journal` and writes that data in batches to CloudWatch.
 
-This utility reads from the systemd journal and sends the data in batches to Cloudwatch.
-
-
-## Derived
-This is based on [advantageous journald-cloudwatch-logs](https://github.com/advantageous/journald-cloudwatch-logs)
-which was forked from [saymedia journald-cloudwatch-logs](https://github.com/saymedia/journald-cloudwatch-logs).
-
-## Status
-It is close to being done. 
-
-
-Improvements:
-
-* Added unit tests (there were none).
-* Added cross compile so I can develop/test on my laptop (MacOS).
-* Made logging stateless. No more need for a state file.
-* No more getting out of sync with CloudWatch.
-* Detects being out of sync and recovers.
-* Fixed error with log messages being too big.
-* Added ability to include or omit logging fields.
-* Created docker image and scripts to test on Linux (CentOS7).
-* Created EC2 image and scripts to test on Linux running in AWS EC2 (CentOS7).
-* Code organization (we use a package).
-* Added comprehensive logging which includes debug logging by config.
-* Uses actual timestamp from journal log record instead of just current time
-* Auto-creates CloudWatch log group if it does not exist
+There are other ways to do this using various techniques. But depending on the size of log messages and size of the core parts
+these other methods are fragile. This utility allows you cap the log field size, include only the fields that you want, or
+exclude the fields you don't want. We find that this is not only useful but essential. 
 
 
 ## Log format
@@ -445,6 +426,33 @@ ps -ef | grep cloud
 /usr/bin/systemd-cloud-watch_linux /etc/journald-cloudwatch.conf
 
 ```
+
+
+
+## Derived
+This is based on [advantageous journald-cloudwatch-logs](https://github.com/advantageous/journald-cloudwatch-logs)
+which was forked from [saymedia journald-cloudwatch-logs](https://github.com/saymedia/journald-cloudwatch-logs).
+
+
+## Status
+It is close to being done. 
+
+
+Improvements:
+
+* Added unit tests (there were none).
+* Added cross compile so I can develop/test on my laptop (MacOS).
+* Made logging stateless. No more need for a state file.
+* No more getting out of sync with CloudWatch.
+* Detects being out of sync and recovers.
+* Fixed error with log messages being too big.
+* Added ability to include or omit logging fields.
+* Created docker image and scripts to test on Linux (CentOS7).
+* Created EC2 image and scripts to test on Linux running in AWS EC2 (CentOS7).
+* Code organization (we use a package).
+* Added comprehensive logging which includes debug logging by config.
+* Uses actual timestamp from journal log record instead of just current time
+* Auto-creates CloudWatch log group if it does not exist
 
 ## License
 
