@@ -50,6 +50,7 @@ type Record struct {
 	Errno       int          `json:"machineId,omitempty" journald:"ERRNO"`
 	Syslog      RecordSyslog `json:"syslog,omitempty"`
 	Kernel      RecordKernel `json:"kernel,omitempty"`
+	SeqId       int64        `json:"seq" `
 }
 
 type RecordSyslog struct {

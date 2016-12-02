@@ -10,6 +10,8 @@ import (
 	"errors"
 )
 
+var messageId = int64(0)
+
 type CloudWatchJournalRepeater struct {
 	conn              *cloudwatchlogs.CloudWatchLogs
 	logGroupName      string
@@ -37,8 +39,14 @@ func NewCloudWatchJournalRepeater(sess *awsSession.Session, logger *Logger, conf
 
 func (repeater *CloudWatchJournalRepeater) WriteBatch(records []Record) error {
 
+	debug := repeater.config.Debug
+	logger := repeater.logger
+
 	events := make([]*cloudwatchlogs.InputLogEvent, 0, len(records))
 	for _, record := range records {
+
+		messageId++
+		record.SeqId = messageId
 
 		jsonDataBytes, err := json.MarshalIndent(record, "", "  ")
 		if err != nil {
@@ -46,6 +54,9 @@ func (repeater *CloudWatchJournalRepeater) WriteBatch(records []Record) error {
 		}
 		jsonData := string(jsonDataBytes)
 
+		if debug {
+			logger.Debug.Println("Sending record ", record.TimeUsec, jsonData)
+		}
 
 		events = append(events, &cloudwatchlogs.InputLogEvent{
 			Message:   aws.String(jsonData),
@@ -88,6 +99,10 @@ func (repeater *CloudWatchJournalRepeater) WriteBatch(records []Record) error {
 			repeater.nextSequenceToken =
 				*describeOutput.LogStreams[0].UploadSequenceToken
 
+			if debug {
+				logger.Debug.Println("Next Token ", repeater.nextSequenceToken)
+			}
+
 			err = putEvents()
 			if err != nil {
 				return fmt.Errorf("failed to put events after sequence lookup: %s", err)
@@ -99,6 +114,11 @@ func (repeater *CloudWatchJournalRepeater) WriteBatch(records []Record) error {
 	}
 
 	createStream := func() error {
+
+		if debug {
+			logger.Debug.Println("Creating log stream ", repeater.logStreamName)
+		}
+
 		request := &cloudwatchlogs.CreateLogStreamInput{
 			LogGroupName:  &repeater.logGroupName,
 			LogStreamName: &repeater.logStreamName,
@@ -108,6 +128,11 @@ func (repeater *CloudWatchJournalRepeater) WriteBatch(records []Record) error {
 	}
 
 	createLogGroup := func() error {
+
+		if debug {
+			logger.Debug.Println("Creating log group ", repeater.logGroupName)
+		}
+
 		request := &cloudwatchlogs.CreateLogGroupInput{
 			LogGroupName:  &repeater.logGroupName,
 		}
@@ -155,7 +180,7 @@ func (repeater *CloudWatchJournalRepeater) WriteBatch(records []Record) error {
 		if awsErr, ok := err.(awserr.Error); ok {
 			if awsErr.Code() == "ResourceNotFoundException" {
 				err = recoverResourceNotFound(awsErr)
-				if err!=nil {
+				if err != nil {
 					return err
 				}
 			}
