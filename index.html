@@ -1,0 +1,496 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Systemd-cloud-watch by advantageous</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/github-dark.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Systemd-cloud-watch</h1>
+        <p>systemd-cloud-watch</p>
+        <p class="view"><a href="https://github.com/advantageous/systemd-cloud-watch">View the Project on GitHub <small>advantageous/systemd-cloud-watch</small></a></p>
+        <ul>
+          <li><a href="https://github.com/advantageous/systemd-cloud-watch/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/advantageous/systemd-cloud-watch/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/advantageous/systemd-cloud-watch">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>
+<a id="systemd-cloud-watch" class="anchor" href="#systemd-cloud-watch" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>systemd-cloud-watch</h1>
+
+<p>This is an alternative process to the AWS-provided logs agent.
+The AWS logs agent copies data from on-disk text log files into <a href="https://aws.amazon.com/cloudwatch/">Cloudwatch</a>.</p>
+
+<p>This utility reads from the systemd journal and sends the data in batches to Cloudwatch.</p>
+
+<h2>
+<a id="derived" class="anchor" href="#derived" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Derived</h2>
+
+<p>This is based on <a href="https://github.com/advantageous/journald-cloudwatch-logs">advantageous journald-cloudwatch-logs</a>
+which was forked from <a href="https://github.com/saymedia/journald-cloudwatch-logs">saymedia journald-cloudwatch-logs</a>.</p>
+
+<h2>
+<a id="status" class="anchor" href="#status" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Status</h2>
+
+<p>It is close to being done. </p>
+
+<p>Improvements:</p>
+
+<ul>
+<li>Added unit tests (there were none).</li>
+<li>Added cross compile so I can develop/test on my laptop (MacOS).</li>
+<li>Made logging stateless. No more need for a state file.</li>
+<li>No more getting out of sync with CloudWatch.</li>
+<li>Detects being out of sync and recovers.</li>
+<li>Fixed error with log messages being too big.</li>
+<li>Added ability to include or omit logging fields.</li>
+<li>Created docker image and scripts to test on Linux (CentOS7).</li>
+<li>Created EC2 image and scripts to test on Linux running in AWS EC2 (CentOS7).</li>
+<li>Code organization (we use a package).</li>
+<li>Added comprehensive logging which includes debug logging by config.</li>
+<li>Uses actual timestamp from journal log record instead of just current time</li>
+<li>Auto-creates CloudWatch log group if it does not exist</li>
+</ul>
+
+<h2>
+<a id="log-format" class="anchor" href="#log-format" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Log format</h2>
+
+<p>The journal event data is written to <strong><em>CloudWatch</em></strong> Logs in JSON format, making it amenable to filtering using the JSON filter syntax.
+Log records are translated to <strong><em>CloudWatch</em></strong> JSON events using a structure like the following:</p>
+
+<h4>
+<a id="sample-log" class="anchor" href="#sample-log" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Sample log</h4>
+
+<div class="highlight highlight-source-js"><pre>{
+    <span class="pl-s"><span class="pl-pds">"</span>instanceId<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>i-xxxxxxxx<span class="pl-pds">"</span></span>,
+    <span class="pl-s"><span class="pl-pds">"</span>pid<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">12354</span>,
+    <span class="pl-s"><span class="pl-pds">"</span>uid<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">0</span>,
+    <span class="pl-s"><span class="pl-pds">"</span>gid<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">0</span>,
+    <span class="pl-s"><span class="pl-pds">"</span>cmdName<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>cron<span class="pl-pds">"</span></span>,
+    <span class="pl-s"><span class="pl-pds">"</span>exe<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>/usr/sbin/cron<span class="pl-pds">"</span></span>,
+    <span class="pl-s"><span class="pl-pds">"</span>cmdLine<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>/usr/sbin/CRON -f<span class="pl-pds">"</span></span>,
+    <span class="pl-s"><span class="pl-pds">"</span>systemdUnit<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>cron.service<span class="pl-pds">"</span></span>,
+    <span class="pl-s"><span class="pl-pds">"</span>bootId<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>fa58079c7a6d12345678b6ebf1234567<span class="pl-pds">"</span></span>,
+    <span class="pl-s"><span class="pl-pds">"</span>hostname<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>ip-10-1-0-15<span class="pl-pds">"</span></span>,
+    <span class="pl-s"><span class="pl-pds">"</span>transport<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>syslog<span class="pl-pds">"</span></span>,
+    <span class="pl-s"><span class="pl-pds">"</span>priority<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>INFO<span class="pl-pds">"</span></span>,
+    <span class="pl-s"><span class="pl-pds">"</span>message<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>pam_unix(cron:session): session opened for user root by (uid=0)<span class="pl-pds">"</span></span>,
+    <span class="pl-s"><span class="pl-pds">"</span>syslog<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
+        <span class="pl-s"><span class="pl-pds">"</span>facility<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">10</span>,
+        <span class="pl-s"><span class="pl-pds">"</span>ident<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>CRON<span class="pl-pds">"</span></span>,
+        <span class="pl-s"><span class="pl-pds">"</span>pid<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">12354</span>
+    },
+    <span class="pl-s"><span class="pl-pds">"</span>kernel<span class="pl-pds">"</span></span><span class="pl-k">:</span> {}
+}</pre></div>
+
+<p>The JSON-formatted log events could also be exported into an AWS ElasticSearch instance using the <strong><em>CloudWatch</em></strong>
+sync mechanism. Once in ElasticSearch, you can use an ELK stack to obtain more elaborate filtering and query capabilities.</p>
+
+<h2>
+<a id="installation" class="anchor" href="#installation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Installation</h2>
+
+<p>If you have a binary distribution, you just need to drop the executable file somewhere.</p>
+
+<p>This tool assumes that it is running on an EC2 instance.</p>
+
+<p>This tool uses <code>libsystemd</code> to access the journal. systemd-based distributions generally ship
+with this already installed, but if yours doesn't you must manually install the library somehow before
+this tool will work.</p>
+
+<p>There are instructions on how to install the Linux requirements for development below see - 
+<a href="#setting-up-a-linux-env-for-testingdeveloping-centos7">Setting up a Linux env for testing/developing (CentOS7)</a>.</p>
+
+<p>We also have two excellent examples of setting up a dev environment using <a href="https://www.packer.io/">packer</a> for both 
+<a href="#building-the-ec2-image-with-packer-to-build-the-linux-instance-to-build-this-project">AWS EC2</a> and 
+<a href="#building-the-docker-image-to-build-the-linux-instance-to-build-this-project">Docker</a>. We setup CentoOS 7.
+The EC2 instance packer build uses the <strong><em>aws command line</em></strong> to create and connect to a running image. 
+These should be instructive for how to setup this utility in your environment to run with <strong><em>systemd</em></strong> as we provide
+all of the systemd scripts in the packer provision scripts for EC2.  An example is good. A running example is better.</p>
+
+<h2>
+<a id="configuration" class="anchor" href="#configuration" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Configuration</h2>
+
+<p>This tool uses a small configuration file to set some values that are required for its operation.
+Most of the configuration values are optional and have default settings, but a couple are required.</p>
+
+<p>The configuration file uses a syntax like this:</p>
+
+<div class="highlight highlight-source-js"><pre>log_group <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>my-awesome-app<span class="pl-pds">"</span></span>
+</pre></div>
+
+<p>The following configuration settings are supported:</p>
+
+<ul>
+<li><p><code>aws_region</code>: (Optional) The AWS region whose CloudWatch Logs API will be written to. If not provided,
+this defaults to the region where the host EC2 instance is running.</p></li>
+<li><p><code>ec2_instance_id</code>: (Optional) The id of the EC2 instance on which the tool is running. There is very
+little reason to set this, since it will be automatically set to the id of the host EC2 instance.</p></li>
+<li><p><code>journal_dir</code>: (Optional) Override the directory where the systemd journal can be found. This is
+useful in conjunction with remote log aggregation, to work with journals synced from other systems.
+The default is to use the local system's journal.</p></li>
+<li><p><code>log_group</code>: (Required) The name of the cloudwatch log group to write logs into. This log group must
+be created before running the program.</p></li>
+<li><p><code>log_priority</code>: (Optional) The highest priority of the log messages to read (on a 0-7 scale). This defaults
+to DEBUG (all messages). This has a behaviour similar to <code>journalctl -p &lt;priority&gt;</code>. At the moment, only
+a single value can be specified, not a range. Possible values are: <code>0,1,2,3,4,5,6,7</code> or one of the corresponding
+<code>"emerg", "alert", "crit", "err", "warning", "notice", "info", "debug"</code>.
+When a single log level is specified, all messages with this log level or a lower (hence more important)
+log level are read and pushed to CloudWatch. For more information about priority levels, look at
+<a href="https://www.freedesktop.org/software/systemd/man/journalctl.html">https://www.freedesktop.org/software/systemd/man/journalctl.html</a></p></li>
+<li><p><code>log_stream</code>: (Optional) The name of the cloudwatch log stream to write logs into. This defaults to
+the EC2 instance id. Each running instance of this application (along with any other applications
+writing logs into the same log group) must have a unique <code>log_stream</code> value. If the given log stream
+doesn't exist then it will be created before writing the first set of journal events.</p></li>
+<li><p><code>buffer_size</code>: (Optional) The size of the local event buffer where journal events will be kept
+in order to write batches of events to the CloudWatch Logs API. The default is 100. A batch of
+new events will be written to CloudWatch Logs every second even if the buffer does not fill, but
+this setting provides a maximum batch size to use when clearing a large backlog of events, e.g.
+from system boot when the program starts for the first time.</p></li>
+<li><p><code>fields</code>: (Optional) Specifies which fields should be included in the JSON map that is sent to CloudWatch.</p></li>
+<li><p><code>omit_fields</code>: (Optional) Specifies which fields should NOT be included in the JSON map that is sent to CloudWatch.</p></li>
+<li><p><code>field_length</code>: (Optional) Specifies how long string fileds can be in the JSON  map that is sent to CloudWatch.
+The default is 255 characters.</p></li>
+<li><p><code>debug</code>: (Optional) Turns on debug logging.</p></li>
+<li><p><code>local</code>: (Optional) Used for unit testing. Will not try to create an AWS meta-data client to read region and AWS credentials.</p></li>
+</ul>
+
+<h3>
+<a id="aws-api-access" class="anchor" href="#aws-api-access" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>AWS API access</h3>
+
+<p>This program requires access to call some of the Cloudwatch API functions. The recommended way to
+achieve this is to create an
+<a href="http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-ec2_instance-profiles.html">IAM Instance Profile</a>
+that grants your EC2 instance a role that has Cloudwatch API access. The program will automatically
+discover and make use of instance profile credentials.</p>
+
+<p>The following IAM policy grants the required access across all log groups in all regions:</p>
+
+<div class="highlight highlight-source-js"><pre>{
+    <span class="pl-s"><span class="pl-pds">"</span>Version<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>2012-10-17<span class="pl-pds">"</span></span>,
+    <span class="pl-s"><span class="pl-pds">"</span>Statement<span class="pl-pds">"</span></span><span class="pl-k">:</span> [
+        {
+            <span class="pl-s"><span class="pl-pds">"</span>Effect<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>Allow<span class="pl-pds">"</span></span>,
+            <span class="pl-s"><span class="pl-pds">"</span>Action<span class="pl-pds">"</span></span><span class="pl-k">:</span> [
+                <span class="pl-s"><span class="pl-pds">"</span>logs:CreateLogStream<span class="pl-pds">"</span></span>,
+                <span class="pl-s"><span class="pl-pds">"</span>logs:PutLogEvents<span class="pl-pds">"</span></span>,
+                <span class="pl-s"><span class="pl-pds">"</span>logs:DescribeLogStreams<span class="pl-pds">"</span></span>
+            ],
+            <span class="pl-s"><span class="pl-pds">"</span>Resource<span class="pl-pds">"</span></span><span class="pl-k">:</span> [
+                <span class="pl-s"><span class="pl-pds">"</span>arn:aws:logs:*:*:log-group:*<span class="pl-pds">"</span></span>,
+                <span class="pl-s"><span class="pl-pds">"</span>arn:aws:logs:*:*:log-group:*:log-stream:*<span class="pl-pds">"</span></span>
+            ]
+        }
+    ]
+}</pre></div>
+
+<p>In more complex environments you may want to restrict further which regions, groups and streams
+the instance can write to. You can do this by adjusting the two ARN strings in the <code>"Resource"</code> section:</p>
+
+<ul>
+<li>The first <code>*</code> in each string can be replaced with an AWS region name like <code>us-east-1</code>
+to grant access only within the given region.</li>
+<li>The <code>*</code> after <code>log-group</code> in each string can be replaced with a Cloudwatch Logs log group name
+to grant access only to the named group.</li>
+<li>The <code>*</code> after <code>log-stream</code> in the second string can be replaced with a Cloudwatch Logs log stream
+name to grant access only to the named stream.</li>
+</ul>
+
+<p>Other combinations are possible too. For more information, see
+<a href="http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#arn-syntax-cloudwatch-logs">the reference on ARNs and namespaces</a>.</p>
+
+<h3>
+<a id="coexisting-with-the-official-cloudwatch-logs-agent" class="anchor" href="#coexisting-with-the-official-cloudwatch-logs-agent" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Coexisting with the official Cloudwatch Logs agent</h3>
+
+<p>This application can run on the same host as the official Cloudwatch Logs agent but care must be taken
+to ensure that they each use a different log stream name. Only one process may write into each log
+stream.</p>
+
+<h2>
+<a id="running-on-system-boot" class="anchor" href="#running-on-system-boot" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Running on System Boot</h2>
+
+<p>This program is best used as a persistent service that starts on boot and keeps running until the
+system is shut down. If you're using <code>journald</code> then you're presumably using systemd; you can create
+a systemd unit for this service. For example:</p>
+
+<pre><code>[Unit]
+Description=journald-cloudwatch-logs
+Wants=basic.target
+After=basic.target network.target
+
+[Service]
+User=nobody
+Group=nobody
+ExecStart=/usr/local/bin/journald-cloudwatch-logs /usr/local/etc/journald-cloudwatch-logs.conf
+KillMode=process
+Restart=on-failure
+RestartSec=42s
+</code></pre>
+
+<p>This program is designed under the assumption that it will run constantly from some point during
+system boot until the system shuts down.</p>
+
+<p>If the service is stopped while the system is running and then later started again, it will
+"lose" any journal entries that were written while it wasn't running. However, on the initial
+run after each boot it will clear the backlog of logs created during the boot process, so it
+is not necessary to run the program particularly early in the boot process unless you wish
+to <em>promptly</em> capture startup messages.</p>
+
+<h2>
+<a id="building" class="anchor" href="#building" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Building</h2>
+
+<h4>
+<a id="test-cloud-watch-package" class="anchor" href="#test-cloud-watch-package" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Test cloud-watch package</h4>
+
+<div class="highlight highlight-source-shell"><pre>go <span class="pl-c1">test</span> -v  github.com/advantageous/systemd-cloud-watch/cloud-watch</pre></div>
+
+<h4>
+<a id="build-and-test-on-linux-centos7" class="anchor" href="#build-and-test-on-linux-centos7" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Build and Test on Linux (Centos7)</h4>
+
+<div class="highlight highlight-source-shell"><pre> ./run_build_linux.sh</pre></div>
+
+<p>The above starts up a docker container, runs <code>go get</code>, <code>go build</code>, <code>go test</code> and then copies the binary to
+<code>systemd-cloud-watch_linux</code>.</p>
+
+<h4>
+<a id="debug-process-running-linux" class="anchor" href="#debug-process-running-linux" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Debug process running Linux</h4>
+
+<div class="highlight highlight-source-shell"><pre> ./run_test_container.sh</pre></div>
+
+<p>The above starts up a docker container that you can develop with that has all the prerequisites needed to
+compile and test this project.</p>
+
+<h4>
+<a id="sample-debug-session" class="anchor" href="#sample-debug-session" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Sample debug session</h4>
+
+<div class="highlight highlight-source-shell"><pre>$ ./run_test_container.sh
+latest: Pulling from advantageous/golang-cloud-watch
+Digest: sha256:eaf5c0a387aee8cc2d690e1c5e18763e12beb7940ca0960ce1b9742229413e71
+Status: Image is up to date <span class="pl-k">for</span> advantageous/golang-cloud-watch:latest
+[root@6e0d1f984c03 /]<span class="pl-c"># cd gopath/src/github.com/advantageous/systemd-cloud-watch/</span>
+.git/                      README.md                  cloud-watch/               packer/                    sample.conf                
+.gitignore                 build_linux.sh             main.go                    run_build_linux.sh         systemd-cloud-watch.iml    
+.idea/                     cgroup/                    output.json                run_test_container.sh      systemd-cloud-watch_linux  
+
+[root@6e0d1f984c03 /]<span class="pl-c"># cd gopath/src/github.com/advantageous/systemd-cloud-watch/</span>
+
+[root@6e0d1f984c03 systemd-cloud-watch]<span class="pl-c"># ls</span>
+README.md  build_linux.sh  cgroup  cloud-watch  main.go  output.json  packer  run_build_linux.sh  
+run_test_container.sh  sample.conf  systemd-cloud-watch.iml  systemd-cloud-watch_linux
+
+[root@6e0d1f984c03 systemd-cloud-watch]<span class="pl-c"># source ~/.bash_profile</span>
+
+[root@6e0d1f984c03 systemd-cloud-watch]<span class="pl-c"># export GOPATH=/gopath</span>
+
+[root@6e0d1f984c03 systemd-cloud-watch]<span class="pl-c"># /usr/lib/systemd/systemd-journald &amp;</span>
+[1] 24
+
+[root@6e0d1f984c03 systemd-cloud-watch]<span class="pl-c"># systemd-cat echo "RUNNING JAVA BATCH JOB - ADF BATCH from `pwd`"</span>
+
+[root@6e0d1f984c03 systemd-cloud-watch]<span class="pl-c"># echo "Running go clean"</span>
+Running go clean
+
+[root@6e0d1f984c03 systemd-cloud-watch]<span class="pl-c"># go clean</span>
+
+[root@6e0d1f984c03 systemd-cloud-watch]<span class="pl-c"># echo "Running go get"</span>
+Running go get
+
+[root@6e0d1f984c03 systemd-cloud-watch]<span class="pl-c"># go get</span>
+
+[root@6e0d1f984c03 systemd-cloud-watch]<span class="pl-c"># echo "Running go build"</span>
+Running go build
+[root@6e0d1f984c03 systemd-cloud-watch]<span class="pl-c"># go build</span>
+
+[root@6e0d1f984c03 systemd-cloud-watch]<span class="pl-c"># echo "Running go test"</span>
+Running go <span class="pl-c1">test</span>
+
+[root@6e0d1f984c03 systemd-cloud-watch]<span class="pl-c"># go test -v github.com/advantageous/systemd-cloud-watch/cloud-watch</span>
+=== RUN   TestRepeater
+config DEBUG: 2016/11/30 08:53:34 config.go:66: Loading log...
+aws INFO: 2016/11/30 08:53:34 aws.go:42: Config <span class="pl-c1">set</span> to <span class="pl-k">local</span>
+aws INFO: 2016/11/30 08:53:34 aws.go:72: Client missing credentials not looked up
+aws INFO: 2016/11/30 08:53:34 aws.go:50: Client missing using config to <span class="pl-c1">set</span> region
+aws INFO: 2016/11/30 08:53:34 aws.go:52: AWSRegion missing using default region us-west-2
+repeater ERROR: 2016/11/30 08:53:44 cloudwatch_journal_repeater.go:141: Error from putEvents NoCredentialProviders: no valid providers <span class="pl-k">in</span> chain. Deprecated.
+    For verbose messaging see aws.Config.CredentialsChainVerboseErrors
+--- SKIP: TestRepeater (10.01s)
+    cloudwatch_journal_repeater_test.go:43: Skipping WriteBatch, you need to setup AWS credentials <span class="pl-k">for</span> this to work
+=== RUN   TestConfig
+<span class="pl-c1">test</span> DEBUG: 2016/11/30 08:53:44 config.go:66: Loading log...
+<span class="pl-c1">test</span> INFO: 2016/11/30 08:53:44 config_test.go:33: [Foo Bar]
+--- PASS: TestConfig (0.00s)
+=== RUN   TestLogOmitField
+<span class="pl-c1">test</span> DEBUG: 2016/11/30 08:53:44 config.go:66: Loading log...
+--- PASS: TestLogOmitField (0.00s)
+=== RUN   TestNewJournal
+--- PASS: TestNewJournal (0.00s)
+=== RUN   TestSdJournal_Operations
+--- PASS: TestSdJournal_Operations (0.00s)
+    journal_linux_test.go:41: Read value=Runtime journal is using 8.0M (max allowed 4.0G, trying to leave 4.0G free of 55.1G available → current limit 4.0G).
+=== RUN   TestNewRecord
+<span class="pl-c1">test</span> DEBUG: 2016/11/30 08:53:44 config.go:66: Loading log...
+--- PASS: TestNewRecord (0.00s)
+=== RUN   TestLimitFields
+<span class="pl-c1">test</span> DEBUG: 2016/11/30 08:53:44 config.go:66: Loading log...
+--- PASS: TestLimitFields (0.00s)
+=== RUN   TestOmitFields
+<span class="pl-c1">test</span> DEBUG: 2016/11/30 08:53:44 config.go:66: Loading log...
+--- PASS: TestOmitFields (0.00s)
+PASS
+ok      github.com/advantageous/systemd-cloud-watch/cloud-watch 10.017s</pre></div>
+
+<h4>
+<a id="building-the-docker-image-to-build-the-linux-instance-to-build-this-project" class="anchor" href="#building-the-docker-image-to-build-the-linux-instance-to-build-this-project" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Building the docker image to build the linux instance to build this project</h4>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-c"># from project root</span>
+<span class="pl-c1">cd</span> packer
+packer build packer_docker.json</pre></div>
+
+<h4>
+<a id="to-run-docker-dev-image" class="anchor" href="#to-run-docker-dev-image" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>To run docker dev image</h4>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-c"># from project root</span>
+<span class="pl-c1">cd</span> packer
+./run.sh
+</pre></div>
+
+<h4>
+<a id="building-the-ec2-image-with-packer-to-build-the-linux-instance-to-build-this-project" class="anchor" href="#building-the-ec2-image-with-packer-to-build-the-linux-instance-to-build-this-project" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Building the ec2 image with packer to build the linux instance to build this project</h4>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-c"># from project root</span>
+<span class="pl-c1">cd</span> packer
+packer build packer_ec2.json</pre></div>
+
+<p>We use the <a href="https://www.packer.io/docs/builders/docker.html">docker</a> support for <a href="https://www.packer.io/">packer</a>.
+("Packer is a tool for creating machine and container images for multiple platforms from a single source configuration.")</p>
+
+<p>Use <code>ec2_env.sh_example</code> to create a <code>ec2_env.sh</code> with the instance id that was just created. </p>
+
+<h4>
+<a id="ec2_envsh_example" class="anchor" href="#ec2_envsh_example" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>ec2_env.sh_example</h4>
+
+<pre><code>#!/usr/bin/env bash
+export ami=ami-YOURAMI
+export subnet=subnet-YOURSUBNET
+export security_group=sg-YOURSG
+export iam_profile=YOUR_IAM_ROLE
+export key_name=MY_PEM_FILE_KEY_NAME
+
+</code></pre>
+
+<h5>
+<a id="using-ec2-image-assumes-you-have-ssh-config-setup" class="anchor" href="#using-ec2-image-assumes-you-have-ssh-config-setup" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Using EC2 image (assumes you have ~/.ssh config setup)</h5>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-c"># from project root</span>
+<span class="pl-c1">cd</span> packer
+
+<span class="pl-c"># Run and log into dev env running in EC2</span>
+./runEc2Dev.sh
+
+<span class="pl-c"># Log into running server</span>
+./loginIntoEc2Dev.sh
+</pre></div>
+
+<h2>
+<a id="setting-up-a-linux-env-for-testingdeveloping-centos7" class="anchor" href="#setting-up-a-linux-env-for-testingdeveloping-centos7" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Setting up a Linux env for testing/developing (CentOS7).</h2>
+
+<div class="highlight highlight-source-shell"><pre>yum -y install wget
+yum install -y git
+yum install -y gcc
+yum install -y systemd-devel
+
+
+<span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>installing go<span class="pl-pds">"</span></span>
+<span class="pl-c1">cd</span> /tmp
+wget https://storage.googleapis.com/golang/go1.7.3.linux-amd64.tar.gz
+tar -C /usr/local/ -xzf go1.7.3.linux-amd64.tar.gz
+rm go1.7.3.linux-amd64.tar.gz
+<span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">'</span>export PATH=$PATH:/usr/local/go/bin<span class="pl-pds">'</span></span> <span class="pl-k">&gt;&gt;</span> <span class="pl-k">~</span>/.bash_profile</pre></div>
+
+<h2>
+<a id="setting-up-java-to-write-to-systemd-journal" class="anchor" href="#setting-up-java-to-write-to-systemd-journal" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Setting up Java to write to systemd journal</h2>
+
+<h4>
+<a id="gradle-build" class="anchor" href="#gradle-build" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>gradle build</h4>
+
+<pre><code>compile 'org.gnieh:logback-journal:0.2.0'
+
+</code></pre>
+
+<h4>
+<a id="logbackxml" class="anchor" href="#logbackxml" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>logback.xml</h4>
+
+<div class="highlight highlight-text-xml"><pre>&lt;?<span class="pl-ent">xml</span><span class="pl-e"> version</span>=<span class="pl-s"><span class="pl-pds">"</span>1.0<span class="pl-pds">"</span></span><span class="pl-e"> encoding</span>=<span class="pl-s"><span class="pl-pds">"</span>UTF-8<span class="pl-pds">"</span></span>?&gt;
+&lt;<span class="pl-ent">configuration</span>&gt;
+
+    &lt;<span class="pl-ent">appender</span> <span class="pl-e">name</span>=<span class="pl-s"><span class="pl-pds">"</span>journal<span class="pl-pds">"</span></span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">"</span>org.gnieh.logback.SystemdJournalAppender<span class="pl-pds">"</span></span> /&gt;
+
+    &lt;<span class="pl-ent">root</span> <span class="pl-e">level</span>=<span class="pl-s"><span class="pl-pds">"</span>INFO<span class="pl-pds">"</span></span>&gt;
+        &lt;<span class="pl-ent">appender-ref</span> <span class="pl-e">ref</span>=<span class="pl-s"><span class="pl-pds">"</span>journal<span class="pl-pds">"</span></span> /&gt;
+        &lt;<span class="pl-ent">customFields</span>&gt;{"serviceName":"adfCalcBatch","serviceHost":"${HOST}"}&lt;/<span class="pl-ent">customFields</span>&gt;
+    &lt;/<span class="pl-ent">root</span>&gt;
+
+
+    &lt;<span class="pl-ent">logger</span> <span class="pl-e">name</span>=<span class="pl-s"><span class="pl-pds">"</span>com.mycompany<span class="pl-pds">"</span></span> <span class="pl-e">level</span>=<span class="pl-s"><span class="pl-pds">"</span>INFO<span class="pl-pds">"</span></span>/&gt;
+
+&lt;/<span class="pl-ent">configuration</span>&gt;</pre></div>
+
+<h2>
+<a id="commands-for-controlling-systemd-service-ec2-dev-env" class="anchor" href="#commands-for-controlling-systemd-service-ec2-dev-env" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Commands for controlling systemd service EC2 dev env</h2>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-c"># Get status</span>
+sudo systemctl status journald-cloudwatch
+<span class="pl-c"># Stop Service</span>
+sudo systemctl stop journald-cloudwatch
+<span class="pl-c"># Find the service</span>
+ps -ef <span class="pl-k">|</span> grep cloud
+<span class="pl-c"># Run service manually</span>
+/usr/bin/systemd-cloud-watch_linux /etc/journald-cloudwatch.conf
+</pre></div>
+
+<h2>
+<a id="license" class="anchor" href="#license" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>License</h2>
+
+<p>Copyright (c) 2015 Say Media Inc</p>
+
+<p>Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:</p>
+
+<p>The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.</p>
+
+<p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.</p>
+
+<p>All additional work is covered under Apache 2.0 license.
+Copyright (c) 2016 Geoff Chandler, Rick Hightower</p>
+      </section>
+    </div>
+    <footer>
+      <p>Project maintained by <a href="https://github.com/advantageous">advantageous</a></p>
+      <p>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></p>
+    </footer>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+    
+  </body>
+</html>
