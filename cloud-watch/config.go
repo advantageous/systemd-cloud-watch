@@ -98,6 +98,11 @@ func LoadConfigFromString(data string, logger *Logger) (*Config, error) {
 		config.BufferSize = 10
 	}
 
+	if config.FieldLength == 0 {
+		logger.Debug.Println("Loading log... FieldLength not set, setting to 255")
+		config.FieldLength = 255
+	}
+
 
 	if config.LogPriority == "" {
 		logger.Debug.Println("Loading log... LogPriority not set, setting to debug")
