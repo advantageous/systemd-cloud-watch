@@ -33,11 +33,11 @@ Improvements:
 
 ## Log format
 
-The journal event data is written to Cloudwatch Logs in JSON format, making it amenable to filtering using the JSON filter syntax.
-Log records are translated to Cloudwatch JSON events using a structure like the following:
+The journal event data is written to ***CloudWatch*** Logs in JSON format, making it amenable to filtering using the JSON filter syntax.
+Log records are translated to ***CloudWatch*** JSON events using a structure like the following:
 
 #### Sample log
-```
+```javascript
 {
     "instanceId": "i-xxxxxxxx",
     "pid": 12354,
@@ -75,6 +75,10 @@ This tool uses `libsystemd` to access the journal. systemd-based distributions g
 with this already installed, but if yours doesn't you must manually install the library somehow before
 this tool will work.
 
+There are instructions on how to install the Linux requirements for development below see (Setting up a Linux env for testing/developing (CentOS7)).
+
+[My link](#user-content-build-and-test-on-linux-centos7) 
+
 ## Configuration
 
 This tool uses a small configuration file to set some values that are required for its operation.
@@ -85,8 +89,6 @@ The configuration file uses a syntax like this:
 ```js
 log_group = "my-awesome-app"
 
-// (you'll need to create this directory before starting the program)
-state_file = "/var/lib/journald-cloudwatch-logs/state"
 ```
 
 The following configuration settings are supported:
@@ -116,9 +118,6 @@ The following configuration settings are supported:
   the EC2 instance id. Each running instance of this application (along with any other applications
   writing logs into the same log group) must have a unique `log_stream` value. If the given log stream
   doesn't exist then it will be created before writing the first set of journal events.
-
-* `state_file`: (Required) Path to a location where the program can write, and later read, some
-  state it needs to preserve between runs. (The format of this file is an implementation detail.)
 
 * `buffer_size`: (Optional) The size of the local event buffer where journal events will be kept
   in order to write batches of events to the CloudWatch Logs API. The default is 100. A batch of
