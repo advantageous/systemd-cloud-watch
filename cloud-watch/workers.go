@@ -14,6 +14,62 @@ func makeTerminateChannel() <-chan os.Signal {
 	return ch
 }
 
+func ReadOneRecord(journal Journal, outChannel chan <- Record, logger *Logger, config *Config,
+instanceId string)  {
+
+
+	debug := config.Debug
+
+	count, err := journal.Next()
+	if err != nil {
+
+		logger.Error.Printf("error reading from journal: %s", err)
+
+		outChannel <- newErrorRecord(instanceId,
+			fmt.Errorf("error reading from journal: %s", err),
+		)
+		if debug {
+			logger.Info.Println("Waiting for two seconds after error")
+		}
+		time.Sleep(2 * time.Second)
+	} else if count <= 0 {
+		if debug {
+			logger.Info.Println("Waiting for two seconds")
+		}
+		journal.Wait(2 * time.Second)
+	} else if count > 0 {
+
+		if debug {
+			logger.Info.Println("No errors, reading log")
+		}
+
+		record, err := NewRecord(journal, logger, config)
+		record.InstanceId = instanceId
+
+
+
+		if err != nil {
+
+			if debug {
+				logger.Info.Println("Error reading record", record)
+			}
+
+			outChannel <- newErrorRecord(instanceId,
+				fmt.Errorf("error unmarshalling record: %s", err),
+			)
+		} else {
+
+			if debug {
+				logger.Info.Println("Read record", record)
+			}
+
+			outChannel <- *record
+		}
+	}
+
+}
+
+
 func ReadRecords(journal Journal, outChannel chan <- Record, logger *Logger, config *Config) {
 
 	if logger == nil {
@@ -34,50 +90,11 @@ func ReadRecords(journal Journal, outChannel chan <- Record, logger *Logger, con
 	}
 
 	for {
-		for {
-			if checkTerminate() {
-				logger.Error.Printf("OS signal terminated")
-				return
-			}
-
-			count, err := journal.Next()
-			if err != nil {
-
-				logger.Error.Printf("error reading from journal: %s", err)
-
-				outChannel <- newErrorRecord(instanceId,
-					fmt.Errorf("error reading from journal: %s", err),
-				)
-				// It's likely that we didn't actually advance here, so
-				// we should wait a bit so we don't spin the CPU at 100%
-				// when we run into errors.
-				time.Sleep(2 * time.Second)
-				continue
-			}
-			if count == 0 {
-				//logger.Info.Println("Notihng read from journal")
-				// If there's nothing new in the stream then we'll
-				// wait for something new to show up.
-				// FIXME: We can actually end up waiting up to 2 seconds
-				// to gracefully terminate because of this. It'd be nicer
-				// to stop waiting if we get a termination signal, but
-				// this will do for now.
-				journal.Wait(2 * time.Second)
-				continue
-			}
-
-			record, err := NewRecord(journal, logger, config)
-			record.InstanceId = instanceId
-
-			if err != nil {
-				outChannel <- newErrorRecord(instanceId,
-					fmt.Errorf("error unmarshalling record: %s", err),
-				)
-				continue
-			}
-
-			outChannel <- *record
+		if checkTerminate() {
+			logger.Error.Printf("OS signal terminated")
+			return
 		}
+		ReadOneRecord(journal, outChannel, logger, config, instanceId)
 	}
 }
 
