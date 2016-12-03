@@ -194,19 +194,19 @@ func RunWorkers(configFilename string, logger *Logger) error {
 	defer journal.Close()
 	defer logger.Info.Println("Leaving main run method")
 
-	err = journal.SeekTail(); if err != nil {
-		logger.Error.Println("Unable to seek to end of systemd journal")
-		return err
-	} else {
-		logger.Info.Println("Success: Seek to end of systemd journal")
-	}
-
-	_, err = journal.PreviousSkip(10); if err != nil {
-		logger.Error.Println("Unable to rewind 10 after seeking to end of systemd journal")
-		return err
-	} else {
-		logger.Info.Println("Success: Rewind 10")
-	}
+	//err = journal.SeekTail(); if err != nil {
+	//	logger.Error.Println("Unable to seek to end of systemd journal")
+	//	return err
+	//} else {
+	//	logger.Info.Println("Success: Seek to end of systemd journal")
+	//}
+	//
+	//_, err = journal.PreviousSkip(10); if err != nil {
+	//	logger.Error.Println("Unable to rewind 10 after seeking to end of systemd journal")
+	//	return err
+	//} else {
+	//	logger.Info.Println("Success: Rewind 10")
+	//}
 
 	records := make(chan Record)
 	batches := make(chan []Record)
