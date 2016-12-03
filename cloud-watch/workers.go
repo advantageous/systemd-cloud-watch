@@ -208,54 +208,46 @@ func RunWorkers(configFilename string, logger *Logger) error {
 	//} else {
 	//	logger.Info.Println("Success: Rewind 10")
 	//}
-
-	records := make(chan Record)
-	batches := make(chan []Record)
-
-	go ReadRecords(journal, records, nil, config)
-	go BatchRecords(records, batches, nil, config)
-
-	session := NewAWSSession(config)
-
-	repeater, err := NewCloudWatchJournalRepeater(session, nil, config)
-
-	for batch := range batches {
-		if (config.Debug) {
-			logger.Info.Printf("Writing records %d", len(batch))
-		}
-		err := repeater.WriteBatch(batch)
-		if err != nil {
-			return fmt.Errorf("Failed to write to cloudwatch: %s", err)
-		}
-	}
-	return nil
-
 	//
-	//for {
+	//records := make(chan Record)
+	//batches := make(chan []Record)
 	//
-	//	count, err := journal.Next()
-	//	if err != nil {
-	//		logger.Error.Printf("Unable to read from systemd journal %s", err)
-	//		// It's likely that we didn't actually advance here, so
-	//		// we should wait a bit so we don't spin the CPU at 100%
-	//		// when we run into errors.
-	//		time.Sleep(2 * time.Second)
-	//		continue
-	//	} else if count == 0 {
-	//		// If there's nothing new in the stream then we'll
-	//		// wait for something new to show up.
-	//		// to gracefully terminate because of this. It'd be nicer
-	//		// to stop waiting if we get a termination signal, but
-	//		// this will do for now.
-	//		logger.Error.Println("Systemd journal is empty")
-	//		journal.Wait(2 * time.Second)
-	//		continue
-	//	} else {
-	//		value, _ := journal.GetDataValue("MESSAGE")
-	//		logger.Debug.Printf("Message %s", value)
+	//go ReadRecords(journal, records, nil, config)
+	//go BatchRecords(records, batches, nil, config)
+	//
+	//session := NewAWSSession(config)
+	//
+	//repeater, err := NewCloudWatchJournalRepeater(session, nil, config)
+	//
+	//for batch := range batches {
+	//	if (config.Debug) {
+	//		logger.Info.Printf("Writing records %d", len(batch))
 	//	}
-	//
+	//	err := repeater.WriteBatch(batch)
+	//	if err != nil {
+	//		return fmt.Errorf("Failed to write to cloudwatch: %s", err)
+	//	}
 	//}
-	//
+	//return nil
+
+
+	for {
+
+		count, err := journal.Next()
+		if err != nil {
+			logger.Error.Printf("Unable to read from systemd journal %s", err)
+			time.Sleep(2 * time.Second)
+			break
+		} else if count == 0 {
+			logger.Error.Println("Systemd journal is empty")
+			journal.Wait(2 * time.Second)
+			continue
+		} else {
+			value, _ := journal.GetDataValue("MESSAGE")
+			logger.Debug.Printf("Message %s", value)
+		}
+
+	}
+
 	return nil
 }
