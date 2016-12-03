@@ -9,6 +9,7 @@ import (
 type SdJournal struct {
 	journal *sdjournal.Journal
 	logger  *Logger
+	debug bool
 }
 
 func NewJournal(config *Config) (Journal, error) {
@@ -18,14 +19,14 @@ func NewJournal(config *Config) (Journal, error) {
 	if config == nil || config.JournalDir == "" {
 		journal, err := sdjournal.NewJournal()
 		return &SdJournal{
-			journal, logger,
+			journal, logger, config.Debug,
 		}, err
 	} else {
 		logger.Info.Printf("using journal dir: %s", config.JournalDir)
 		journal, err := sdjournal.NewJournalFromDir(config.JournalDir)
 
 		return &SdJournal{
-			journal, logger,
+			journal, logger, config.Debug,
 		}, err
 	}
 
@@ -53,6 +54,10 @@ func (journal *SdJournal) Close() error {
 // Next advances the read pointer into the journal by one entry.
 func (journal *SdJournal) Next() (uint64, error) {
 	loc, err := journal.journal.Next()
+	if (journal.deubg) {
+		journal.logger.Info.Printf("NEXT location %d %err", loc, err)
+	}
+
 	return loc, err
 }
 
