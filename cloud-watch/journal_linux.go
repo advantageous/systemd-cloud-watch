@@ -16,17 +16,25 @@ func NewJournal(config *Config) (Journal, error) {
 
 	logger := NewSimpleLogger("journal", config)
 
+	var debug bool
+
+	if config == nil {
+		debug = true
+	} else {
+		debug = config.Debug
+	}
+
 	if config == nil || config.JournalDir == "" {
 		journal, err := sdjournal.NewJournal()
 		return &SdJournal{
-			journal, logger, config.Debug,
+			journal, logger, debug,
 		}, err
 	} else {
 		logger.Info.Printf("using journal dir: %s", config.JournalDir)
 		journal, err := sdjournal.NewJournalFromDir(config.JournalDir)
 
 		return &SdJournal{
-			journal, logger, config.Debug,
+			journal, logger, debug,
 		}, err
 	}
 
