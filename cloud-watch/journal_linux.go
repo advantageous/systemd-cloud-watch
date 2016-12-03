@@ -54,7 +54,7 @@ func (journal *SdJournal) Close() error {
 // Next advances the read pointer into the journal by one entry.
 func (journal *SdJournal) Next() (uint64, error) {
 	loc, err := journal.journal.Next()
-	if (journal.deubg) {
+	if (journal.debug) {
 		journal.logger.Info.Printf("NEXT location %d %err", loc, err)
 	}
 
