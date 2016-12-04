@@ -6,7 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"github.com/coreos/go-systemd/sdjournal"
+//	"github.com/coreos/go-systemd/sdjournal"
 )
 
 func makeTerminateChannel() <-chan os.Signal {
@@ -180,15 +180,15 @@ func RunWorkers(configFilename string, logger *Logger) error {
 
 	logger.Info.Println("Starting up systemd cloudwatch")
 
-	//config, err := LoadConfig(configFilename, logger); if err != nil {
-	//	logger.Error.Println("Unable to load config %s %s", err, configFilename)
-	//	return fmt.Errorf("error opening config: %s %s", err, configFilename)
-	//}
+	config, err := LoadConfig(configFilename, logger); if err != nil {
+		logger.Error.Println("Unable to load config %s %s", err, configFilename)
+		return fmt.Errorf("error opening config: %s %s", err, configFilename)
+	}
 
-	//journal, err := NewJournal(config)
+	journal, err := NewJournal(config)
 
-	journal, err := sdjournal.NewJournal()
-	//journal.AddLogFilters(config)
+//	journal, err := sdjournal.NewJournal()
+	journal.AddLogFilters(config)
 
 	if err != nil {
 		logger.Error.Println("Unable to load journal %s", err)
@@ -204,53 +204,57 @@ func RunWorkers(configFilename string, logger *Logger) error {
 		logger.Info.Println("Success: Seek to end of systemd journal")
 	}
 
-	//
-	//_, err = journal.PreviousSkip(10); if err != nil {
-	//	logger.Error.Println("Unable to rewind 10 after seeking to end of systemd journal")
-	//	return err
-	//} else {
-	//	logger.Info.Println("Success: Rewind 10")
-	//}
-	//
-	//records := make(chan Record)
-	//batches := make(chan []Record)
-	//
-	//go ReadRecords(journal, records, nil, config)
-	//go BatchRecords(records, batches, nil, config)
-	//
-	//session := NewAWSSession(config)
-	//
-	//repeater, err := NewCloudWatchJournalRepeater(session, nil, config)
-	//
-	//for batch := range batches {
-	//	if (config.Debug) {
-	//		logger.Info.Printf("Writing records %d", len(batch))
-	//	}
-	//	err := repeater.WriteBatch(batch)
-	//	if err != nil {
-	//		return fmt.Errorf("Failed to write to cloudwatch: %s", err)
-	//	}
-	//}
-	//return nil
 
-
-	for {
-
-		count, err := journal.Next()
-		if err != nil {
-			logger.Error.Printf("Unable to read from systemd journal %s", err)
-			time.Sleep(2 * time.Second)
-			break
-		} else if count == 0 {
-			logger.Error.Println("Systemd journal is empty")
-			journal.Wait(2 * time.Second)
-			continue
-		} else {
-			value, _ := journal.GetDataValue("MESSAGE")
-			logger.Debug.Printf("Message %s", value)
-		}
-
+	_, err = journal.PreviousSkip(10); if err != nil {
+		logger.Error.Println("Unable to rewind 10 after seeking to end of systemd journal")
+		return err
+	} else {
+		logger.Info.Println("Success: Rewind 10")
 	}
 
+	records := make(chan Record)
+	batches := make(chan []Record)
+
+	go ReadRecords(journal, records, nil, config)
+	go BatchRecords(records, batches, nil, config)
+
+	var repeater JournalRepeater
+
+	if !config.MockCloudWatch {
+		session := NewAWSSession(config)
+		repeater, err = NewCloudWatchJournalRepeater(session, nil, config)
+	} else {
+		repeater = NewMockJournalRepeater()
+	}
+	for batch := range batches {
+		if (config.Debug) {
+			logger.Info.Printf("Writing records %d", len(batch))
+		}
+		err := repeater.WriteBatch(batch)
+		if err != nil {
+			return fmt.Errorf("Failed to write to cloudwatch: %s", err)
+		}
+	}
 	return nil
+
+
+	//for {
+	//
+	//	count, err := journal.Next()
+	//	if err != nil {
+	//		logger.Error.Printf("Unable to read from systemd journal %s", err)
+	//		time.Sleep(2 * time.Second)
+	//		break
+	//	} else if count == 0 {
+	//		logger.Error.Println("Systemd journal is empty ------- ")
+	//		journal.Wait(2 * time.Second)
+	//		continue
+	//	} else {
+	//		value, _ := journal.GetDataValue("MESSAGE")
+	//		logger.Debug.Printf("Message %s", value)
+	//	}
+	//
+	//}
+
+	//return nil
 }

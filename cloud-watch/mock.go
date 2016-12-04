@@ -19,6 +19,26 @@ type TestJournal struct {
 	err     error
 }
 
+type MockJournalRepeater struct {
+	logger  *Logger
+}
+
+func (repeater *MockJournalRepeater) Close() error {
+	return nil
+}
+
+func (repeater *MockJournalRepeater) WriteBatch(records []Record) error {
+
+	for _, record := range records {
+		repeater.logger.Info.Println(record.Message)
+	}
+	return nil
+}
+
+func NewMockJournalRepeater() (repeater *MockJournalRepeater) {
+	return &MockJournalRepeater{NewSimpleLogger("mock-repeater", nil)}
+}
+
 
 func (journal *TestJournal) SetCount(count uint64) {
 

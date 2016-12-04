@@ -21,6 +21,7 @@ type Config struct {
 	fields        map[string]struct{}
 	omitFields    map[string]struct{}
 	FieldLength   int    `hcl:"field_length"`
+	MockCloudWatch         bool    `hcl:"mock-cloud-watch"`
 }
 
 func (config *Config) GetJournalDLogPriority() (Priority) {

@@ -37,6 +37,10 @@ func NewCloudWatchJournalRepeater(sess *awsSession.Session, logger *Logger, conf
 	}, nil
 }
 
+func (repeater *CloudWatchJournalRepeater) Close() error {
+	return nil
+}
+
 func (repeater *CloudWatchJournalRepeater) WriteBatch(records []Record) error {
 
 	debug := repeater.config.Debug
