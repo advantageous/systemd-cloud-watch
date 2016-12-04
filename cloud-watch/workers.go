@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"github.com/coreos/go-systemd/sdjournal"
 )
 
 func makeTerminateChannel() <-chan os.Signal {
@@ -179,13 +180,15 @@ func RunWorkers(configFilename string, logger *Logger) error {
 
 	logger.Info.Println("Starting up systemd cloudwatch")
 
-	config, err := LoadConfig(configFilename, logger); if err != nil {
-		logger.Error.Println("Unable to load config %s %s", err, configFilename)
-		return fmt.Errorf("error opening config: %s %s", err, configFilename)
-	}
+	//config, err := LoadConfig(configFilename, logger); if err != nil {
+	//	logger.Error.Println("Unable to load config %s %s", err, configFilename)
+	//	return fmt.Errorf("error opening config: %s %s", err, configFilename)
+	//}
 
-	journal, err := NewJournal(config)
-	journal.AddLogFilters(config)
+	//journal, err := NewJournal(config)
+
+	journal, err := sdjournal.NewJournal()
+	//journal.AddLogFilters(config)
 
 	if err != nil {
 		logger.Error.Println("Unable to load journal %s", err)

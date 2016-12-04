@@ -11,7 +11,14 @@ export GOPATH=/gopath
 
 
 /usr/lib/systemd/systemd-journald &
-systemd-cat echo "RUNNING JAVA BATCH JOB - ADF BATCH from `pwd`"
+
+for x in {1..100}
+do
+    for i in {1..7}
+    do
+        systemd-cat echo "$i JOURNAL D TEST $x"
+    done
+done
 
 
 echo "Running go clean"
