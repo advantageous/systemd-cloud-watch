@@ -124,6 +124,14 @@ The following configuration settings are supported:
 
 * `local`: (Optional) Used for unit testing. Will not try to create an AWS meta-data client to read region and AWS credentials.
 
+* `tail`: (Optional) Start from the tail of log. Only send new log entries. This is good for reboot so you don't send all of the
+logs in the system, which is the default behavior. 
+
+* `rewind`: (Optional) Used to rewind X number of entries from the tail of the log. Must be used in conjunction with the 
+`tail` setting.
+
+* `mock-cloud-watch` : (Optional) Used to send logs to a Journal Repeater that just spits out message and priority to the console.
+This is used for development only. 
 
 
 ### AWS API access
@@ -436,7 +444,135 @@ which was forked from [saymedia journald-cloudwatch-logs](https://github.com/say
 
 
 ## Status
-It is close to being done. 
+Done and released. 
+
+
+
+### Using as a lib.
+
+You can use this project as a lib and you can pass in your own *JournalRepeater* and your own *Journal*.
+
+
+#### Interface for JournalRepeater
+```go
+package cloud_watch
+
+
+type Record struct {...} //see source code
+
+type JournalRepeater interface {
+	// Close closes a journal opened with NewJournal.
+	Close() error;
+	WriteBatch(records []Record) error;
+}
+```
+
+#### Interface for Journal
+```go
+type Journal interface {
+	// Close closes a journal opened with NewJournal.
+	Close() error;
+
+	// Next advances the read pointer into the journal by one entry.
+	Next() (uint64, error);
+
+	// NextSkip advances the read pointer by multiple entries at once,
+	// as specified by the skip parameter.
+	NextSkip(skip uint64) (uint64, error);
+
+	// Previous sets the read pointer into the journal back by one entry.
+	Previous() (uint64, error);
+
+	// PreviousSkip sets back the read pointer by multiple entries at once,
+	// as specified by the skip parameter.
+	PreviousSkip(skip uint64) (uint64, error);
+
+	// GetDataValue gets the data object associated with a specific field from the
+	// current journal entry, returning only the value of the object.
+	GetDataValue(field string) (string, error);
+
+
+	// GetRealtimeUsec gets the realtime (wallclock) timestamp of the current
+	// journal entry.
+	GetRealtimeUsec() (uint64, error);
+
+ 	AddLogFilters(config *Config)
+
+	// GetMonotonicUsec gets the monotonic timestamp of the current journal entry.
+	GetMonotonicUsec() (uint64, error);
+
+	// GetCursor gets the cursor of the current journal entry.
+	GetCursor() (string, error);
+
+
+	// SeekHead seeks to the beginning of the journal, i.e. the oldest available
+	// entry.
+	SeekHead() error;
+
+	// SeekTail may be used to seek to the end of the journal, i.e. the most recent
+	// available entry.
+	SeekTail() error;
+
+	// SeekCursor seeks to a concrete journal cursor.
+	SeekCursor(cursor string) error;
+
+	// Wait will synchronously wait until the journal gets changed. The maximum time
+	// this call sleeps may be controlled with the timeout parameter.  If
+	// sdjournal.IndefiniteWait is passed as the timeout parameter, Wait will
+	// wait indefinitely for a journal change.
+	Wait(timeout time.Duration) int;
+}
+
+```
+
+#### Using as a lib
+```go
+
+package main
+
+import (
+	jcw  "github.com/advantageous/systemd-cloud-watch/cloud-watch"
+	"flag"
+	"os"
+)
+
+var help = flag.Bool("help", false, "set to true to show this help")
+
+func main() {
+
+	logger := jcw.NewSimpleLogger("main", nil)
+
+	flag.Parse()
+
+	if *help {
+		usage(logger)
+		os.Exit(0)
+	}
+
+	configFilename := flag.Arg(0)
+	if configFilename == "" {
+		usage(logger)
+		panic("config file name must be set!")
+	}
+
+	config := jcw.CreateConfig(configFilename, logger)
+	logger = jcw.NewSimpleLogger("main", config)  
+	journal := jcw.CreateJournal(config, logger) //Instead of this, load your own journal
+	repeater := jcw.CreateRepeater(config, logger) //Instead of this, load your own repeater
+
+	jcw.RunWorkers(journal, repeater, logger, config )
+}
+
+func usage(logger *jcw.Logger) {
+	logger.Error.Println("Usage: systemd-cloud-watch  <config-file>")
+	flag.PrintDefaults()
+}
+
+```
+
+You could for example create a *JournalRepeater* that writes to *InfluxDB* instead of *CloudWatch*.
+
+
 
 
 Improvements:
