@@ -1,6 +1,9 @@
 package cloud_watch
 
-import "testing"
+import (
+	"testing"
+	"encoding/json"
+)
 
 var testMap = map[string]string{
 	"__CURSOR": "s=6c072e0567ff423fa9cb39f136066299;i=3;b=923def0648b1422aa28a8846072481f2;m=65ee792c;t=542783a1cc4e0;x=7d96bf9e60a6512b",
@@ -21,6 +24,7 @@ var testMap = map[string]string{
 	"_HOSTNAME": "f5076731cfdb",
 	"MESSAGE": "Journal started",
 	"MESSAGE_ID": "f77379a8490b408bbe5f6940505a777b",
+	"SYSLOG_FACILITY": "5",
 }
 
 func TestNewRecord(t *testing.T) {
@@ -56,6 +60,50 @@ debug=true
 		t.Logf("Unable to read time stamp %d", record.TimeUsec)
 		t.Fail()
 	}
+
+}
+
+
+
+func TestNewRecordJson(t *testing.T) {
+
+	journal := NewJournalWithMap(testMap)
+	logger := NewSimpleLogger("test", nil)
+	data := `
+log_group="dcos-logstream-test"
+state_file="/var/lib/journald-cloudwatch-logs/state-test"
+log_priority=3
+debug=true
+	`
+	config, err := LoadConfigFromString(data, logger)
+
+	record, err := NewRecord(journal, logger, config)
+
+	if err != nil {
+		t.Logf("Failed err=%s", err)
+		t.Fail()
+	}
+
+	if record == nil {
+		t.Log("Record nil")
+		t.Fail()
+	}
+
+	if record.CommandLine != "/usr/lib/systemd/systemd-journald" {
+		t.Log("Unable to read cmd line")
+		t.Fail()
+	}
+
+	if record.TimeUsec != 1480459022025952 / 1000 {
+		t.Logf("Unable to read time stamp %d", record.TimeUsec)
+		t.Fail()
+	}
+
+
+	jsonDataBytes, err := json.MarshalIndent(record, "", "  ")
+	jsonData := string(jsonDataBytes)
+
+	t.Logf(jsonData)
 
 }
 

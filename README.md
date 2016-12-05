@@ -590,6 +590,8 @@ Improvements:
 * Added comprehensive logging which includes debug logging by config.
 * Uses actual timestamp from journal log record instead of just current time
 * Auto-creates CloudWatch log group if it does not exist
+* Allow this to be used as a library by providing interface for Journal and JournalWriter.
+
 
 ## License
 
