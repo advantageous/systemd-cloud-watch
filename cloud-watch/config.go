@@ -6,22 +6,24 @@ import (
 )
 
 type Config struct {
-	AWSRegion     string `hcl:"aws_region"`
-	EC2InstanceId string `hcl:"ec2_instance_id"`
-	LogGroupName  string `hcl:"log_group"`
-	LogStreamName string `hcl:"log_stream"`
-	LogPriority   string `hcl:"log_priority"`
-	JournalDir    string `hcl:"journal_dir"`
-	BufferSize    int    `hcl:"buffer_size"`
-	Debug         bool    `hcl:"debug"`
-	Local         bool    `hcl:"local"`
-	AllowedFields []string `hcl:"fields"`
-	OmitFields    []string `hcl:"omit_fields"`
-	logPriority   int
-	fields        map[string]struct{}
-	omitFields    map[string]struct{}
-	FieldLength   int    `hcl:"field_length"`
-	MockCloudWatch         bool    `hcl:"mock-cloud-watch"`
+	AWSRegion      string 	`hcl:"aws_region"`
+	EC2InstanceId  string 	`hcl:"ec2_instance_id"`
+	LogGroupName   string 	`hcl:"log_group"`
+	LogStreamName  string 	`hcl:"log_stream"`
+	LogPriority    string 	`hcl:"log_priority"`
+	JournalDir     string 	`hcl:"journal_dir"`
+	BufferSize     int    	`hcl:"buffer_size"`
+	Debug          bool    	`hcl:"debug"`
+	Tail           bool    	`hcl:"tail"`
+	Rewind         int	`hcl:"rewind"`
+	Local          bool	`hcl:"local"`
+	AllowedFields  []string `hcl:"fields"`
+	OmitFields     []string `hcl:"omit_fields"`
+	logPriority    int
+	fields         map[string]struct{}
+	omitFields     map[string]struct{}
+	FieldLength    int    `hcl:"field_length"`
+	MockCloudWatch bool    `hcl:"mock-cloud-watch"`
 }
 
 func (config *Config) GetJournalDLogPriority() (Priority) {
@@ -104,10 +106,16 @@ func LoadConfigFromString(data string, logger *Logger) (*Config, error) {
 		config.FieldLength = 255
 	}
 
-
 	if config.LogPriority == "" {
 		logger.Debug.Println("Loading log... LogPriority not set, setting to debug")
 		config.LogPriority = "debug"
+	}
+
+	if config.Tail {
+		if config.Rewind == 0 {
+			logger.Debug.Println("Loading log... Rewind not set, but Tail is so setting to 10")
+			config.Rewind = 10
+		}
 	}
 
 	return config, nil

@@ -22,14 +22,15 @@ func main() {
 	configFilename := flag.Arg(0)
 	if configFilename == "" {
 		usage(logger)
-		os.Exit(1)
+		panic("config file name must be set!")
 	}
 
-	err := jcw.RunWorkers(configFilename, logger)
-	if err != nil {
-		logger.Error.Printf("Error %s", err)
-		os.Exit(2)
-	}
+	config := jcw.CreateConfig(configFilename, logger)
+	logger = jcw.NewSimpleLogger("main", config)
+	journal := jcw.CreateJournal(config, logger)
+	repeater := jcw.CreateRepeater(config, logger)
+
+	jcw.RunWorkers(journal, repeater, logger, config )
 }
 
 func usage(logger *jcw.Logger) {

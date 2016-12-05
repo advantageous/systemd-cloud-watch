@@ -30,7 +30,37 @@ func (repeater *MockJournalRepeater) Close() error {
 func (repeater *MockJournalRepeater) WriteBatch(records []Record) error {
 
 	for _, record := range records {
-		repeater.logger.Info.Println(record.Message)
+
+		priority := string(PriorityJsonMap[record.Priority])
+
+		switch record.Priority {
+
+		case EMERGENCY:
+			repeater.logger.Error.Println(priority, "------", record.Message)
+		case ALERT:
+			repeater.logger.Error.Println(priority, "------", record.Message)
+
+		case CRITICAL:
+			repeater.logger.Error.Println(priority, "------", record.Message)
+		case ERROR:
+			repeater.logger.Error.Println(priority, "------", record.Message)
+		case NOTICE:
+			repeater.logger.Warning.Println(priority, "------", record.Message)
+
+		case WARNING:
+			repeater.logger.Warning.Println(priority, "------", record.Message)
+
+		case INFO:
+			repeater.logger.Info.Println(priority, "------", record.Message)
+
+		case DEBUG:
+			repeater.logger.Debug.Println(priority, "------", record.Message)
+
+		default:
+			repeater.logger.Debug.Println("?????", priority, "------", record.Message)
+
+		}
+
 	}
 	return nil
 }

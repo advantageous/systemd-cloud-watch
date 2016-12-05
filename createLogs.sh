@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 
+priorities=("emerg" "alert" "crit" "err" "warning" "notice" "info" "debug")
+
 for x in {1..100}
 do
-    for i in {1..7}
+    for priority in "${priorities[@]}"
     do
-        echo "$i JOURNAL D TEST $x"
-        systemd-cat echo "$i JOURNAL D TEST $x"
+        echo "[$priority] TEST WITH LATEST LEVEL $x" | systemd-cat -p "$priority"
     done
 done
