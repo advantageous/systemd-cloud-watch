@@ -32,31 +32,31 @@ var PriorityJsonMap = map[Priority][]byte{
 }
 
 type Record struct {
-	InstanceId  string       	`json:"instanceId,omitempty"`
-	TimeUsec    int64        	`json:"-" journald:"__REALTIME_TIMESTAMP"`
-	PID         int          	`json:"pid,omitempty" journald:"_PID"`
-	UID         int          	`json:"uid,omitempty" journald:"_UID"`
-	GID         int          	`json:"gid,omitempty" journald:"_GID"`
-	Command     string       	`json:"cmdName,omitempty" journald:"_COMM"`
-	Executable  string       	`json:"exe,omitempty" journald:"_EXE"`
-	CommandLine string       	`json:"cmdLine,omitempty" journald:"_CMDLINE"`
-	SystemdUnit string       	`json:"systemdUnit,omitempty" journald:"_SYSTEMD_UNIT"`
-	BootId      string      	`json:"bootId,omitempty" journald:"_BOOT_ID"`
-	MachineId   string       	`json:"machineId,omitempty" journald:"_MACHINE_ID"`
-	Hostname    string       	`json:"hostname,omitempty" journald:"_HOSTNAME"`
-	Transport   string       	`json:"transport,omitempty" journald:"_TRANSPORT"`
-	Priority    Priority     	`json:"priority" journald:"PRIORITY"`
-	Message     string      	`json:"message" journald:"MESSAGE"`
-	MessageId   string      	`json:"messageId,omitempty" journald:"MESSAGE_ID"`
-	Errno       int         	`json:"machineId,omitempty" journald:"ERRNO"`
-	SeqId       int64       	`json:"seq,omitempty" `
-	Facility    int        		`json:"sysFacility,omitempty" journald:"SYSLOG_FACILITY"`
-	Identifier  string        	`json:"sysIdent,omitempty" journald:"SYSLOG_IDENTIFIER"`
-	Sys_PID     int                	`json:"sysPid,omitempty" journald:"SYSLOG_PID"`
-	Device      string        	`json:"kernelDevice,omitempty" journald:"_KERNEL_DEVICE"`
-	Subsystem   string        	`json:"kernelSubsystem,omitempty" journald:"_KERNEL_SUBSYSTEM"`
-	SysName     string        	`json:"kernelSysName,omitempty" journald:"_UDEV_SYSNAME"`
-	DevNode     string        	`json:"kernelDevNode,omitempty" journald:"_UDEV_DEVNODE"`
+	InstanceId  string        `json:"instanceId,omitempty"`
+	TimeUsec    int64         `json:"-" journald:"__REALTIME_TIMESTAMP"`
+	PID         int           `json:"pid,omitempty" journald:"_PID"`
+	UID         int           `json:"uid,omitempty" journald:"_UID"`
+	GID         int           `json:"gid,omitempty" journald:"_GID"`
+	Command     string        `json:"cmdName,omitempty" journald:"_COMM"`
+	Executable  string        `json:"exe,omitempty" journald:"_EXE"`
+	CommandLine string        `json:"cmdLine,omitempty" journald:"_CMDLINE"`
+	SystemdUnit string        `json:"systemdUnit,omitempty" journald:"_SYSTEMD_UNIT"`
+	BootId      string        `json:"bootId,omitempty" journald:"_BOOT_ID"`
+	MachineId   string        `json:"machineId,omitempty" journald:"_MACHINE_ID"`
+	Hostname    string        `json:"hostname,omitempty" journald:"_HOSTNAME"`
+	Transport   string        `json:"transport,omitempty" journald:"_TRANSPORT"`
+	Priority    Priority      `json:"priority" journald:"PRIORITY"`
+	Message     string        `json:"message" journald:"MESSAGE"`
+	MessageId   string        `json:"messageId,omitempty" journald:"MESSAGE_ID"`
+	Errno       int           `json:"machineId,omitempty" journald:"ERRNO"`
+	SeqId       int64         `json:"seq,omitempty" `
+	Facility    int           `json:"syslogFacility,omitempty" journald:"SYSLOG_FACILITY"`
+	Identifier  string        `json:"syslogIdent,omitempty" journald:"SYSLOG_IDENTIFIER"`
+	SysPID      int           `json:"syslogPid,omitempty" journald:"SYSLOG_PID"`
+	Device      string        `json:"kernelDevice,omitempty" journald:"_KERNEL_DEVICE"`
+	Subsystem   string        `json:"kernelSubsystem,omitempty" journald:"_KERNEL_SUBSYSTEM"`
+	SysName     string        `json:"kernelSysName,omitempty" journald:"_UDEV_SYSNAME"`
+	DevNode     string        `json:"kernelDevNode,omitempty" journald:"_UDEV_DEVNODE"`
 }
 
 func NewRecord(journal Journal, logger *Logger, config *Config) (*Record, error) {
@@ -82,7 +82,6 @@ func decodeRecord(journal Journal, toVal reflect.Value, logger *Logger, config *
 	toType := toVal.Type()
 
 	numField := toVal.NumField()
-
 
 	for i := 0; i < numField; i++ {
 		fieldVal := toVal.Field(i)
