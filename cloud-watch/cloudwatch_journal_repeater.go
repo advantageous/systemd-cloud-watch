@@ -109,7 +109,7 @@ func (repeater *CloudWatchJournalRepeater) WriteBatch(records []Record) error {
 
 			err = putEvents()
 			if err != nil {
-				return fmt.Errorf("failed to put events after sequence lookup: %s", err)
+				return fmt.Errorf("failed to put events after sequence lookup: : %s %v", err.Error(), err)
 			}
 			return nil
 		}
@@ -155,21 +155,21 @@ func (repeater *CloudWatchJournalRepeater) WriteBatch(records []Record) error {
 			if awsErr.Code() == "ResourceNotFoundException" {
 				err = createLogGroup()
 				if err != nil {
-					return fmt.Errorf("failed to create log group: %s", err)
+					return fmt.Errorf("failed to create log group: %s %v", err.Error(), err)
 				}
 				err = createStream()
 				if err != nil {
-					return fmt.Errorf("failed to create stream after log group: %s", err)
+					return fmt.Errorf("failed to create stream after log group: %s %v", err.Error(), err)
 				}
 
 			} else {
-				return fmt.Errorf("failed to create stream: %s", err)
+				return fmt.Errorf("failed to create stream: %s %v", err.Error(), err)
 			}
 		}
 
 		err = putEvents()
 		if err != nil {
-			return fmt.Errorf("failed to put events: %s", err)
+			return fmt.Errorf("failed to put events: %s %v", err.Error(), err)
 		}
 		return nil
 
@@ -190,22 +190,22 @@ func (repeater *CloudWatchJournalRepeater) WriteBatch(records []Record) error {
 			}
 			if awsErr.Code() == "DataAlreadyAcceptedException" {
 				// This batch was already sent?
-				repeater.logger.Error.Printf("DataAlreadyAcceptedException from putEvents %s", err)
+				repeater.logger.Error.Printf("DataAlreadyAcceptedException from putEvents : %s %v", err.Error(), err)
 				err = getNextToken()
 				if err != nil {
-					return fmt.Errorf("Next token failed after DataAlreadyAcceptedException : %s", err)
+					return fmt.Errorf("Next token failed after DataAlreadyAcceptedException :  %s %v", err.Error(), err)
 				}
 			}
 			if awsErr.Code() == "InvalidSequenceTokenException" {
-				repeater.logger.Error.Printf("InvalidSequenceTokenException from putEvents %s", err)
+				repeater.logger.Error.Printf("InvalidSequenceTokenException from putEvents : %s %v", err.Error(), err)
 				err = getNextToken()
 				if err != nil {
-					return fmt.Errorf("Next token failed after InvalidSequenceTokenException : %s", err)
+					return fmt.Errorf("Next token failed after InvalidSequenceTokenException : %s %v", err.Error(), err)
 				}
 			}
 		}
-		repeater.logger.Error.Printf("Error from putEvents %s", err)
-		return fmt.Errorf("failed to put events: %s", err)
+		repeater.logger.Error.Printf("Error from putEvents : %s %v", err.Error(), err)
+		return fmt.Errorf("failed to put events: : %s %v", err.Error(), err)
 	} else {
 		if (repeater.config.Debug) {
 			repeater.logger.Info.Println("SENT SUCCESSFULLY")

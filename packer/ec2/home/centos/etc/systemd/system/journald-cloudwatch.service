@@ -13,7 +13,9 @@ RestartSec=42s
 
 
 [Install]
-WantedBy=getty.target
+WantedBy=multi-user.target
+
+
 
 
 

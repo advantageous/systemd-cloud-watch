@@ -63,7 +63,7 @@ func (journal *SdJournal) Close() error {
 func (journal *SdJournal) Next() (uint64, error) {
 	loc, err := journal.journal.Next()
 	if (journal.debug) {
-		journal.logger.Info.Printf("NEXT location %d %err", loc, err)
+		journal.logger.Info.Printf("NEXT location %d %v", loc, err)
 	}
 
 	return loc, err

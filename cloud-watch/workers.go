@@ -23,10 +23,10 @@ instanceId string) {
 	count, err := journal.Next()
 	if err != nil {
 
-		logger.Error.Printf("error reading from journal: %s", err)
+		logger.Error.Printf("error reading from journal: %s %v", err.Error(), err)
 
 		outChannel <- newErrorRecord(instanceId,
-			fmt.Errorf("error reading from journal: %s", err),
+			fmt.Errorf("error reading from journal: : %s %v", err.Error(), err),
 		)
 		if debug {
 			logger.Info.Println("Waiting for two seconds after error")
@@ -268,8 +268,11 @@ func RunWorkers(journal Journal, repeater JournalRepeater, logger *Logger, confi
 		}
 		err := repeater.WriteBatch(batch)
 		if err != nil {
-			logger.Error.Panic("Failed to write to cloudwatch:", err)
+
+			for _,item := range batch {
+				logger.Error.Println("Unable to write batch item %+v", item)
+			}
+			logger.Error.Println("Failed to write to cloudwatch batch size = : %s %v", len(batch), err.Error(), err)
 		}
 	}
-
 }

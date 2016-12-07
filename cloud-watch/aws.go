@@ -58,14 +58,14 @@ func getRegion(client *ec2metadata.EC2Metadata, config *Config, session *awsSess
 	} else {
 		region, err := client.Region()
 		if err != nil {
-			awsLogger.Error.Printf("Unable to get region from aws meta client %s", err)
+			awsLogger.Error.Printf("Unable to get region from aws meta client : %s %v", err.Error(), err)
 			os.Exit(3)
 		}
 
 		config.AWSRegion = region
 		config.EC2InstanceId, err = client.GetMetadata("instance-id")
 		if err != nil {
-			awsLogger.Error.Printf("Unable to get instance id from aws meta client %s", err)
+			awsLogger.Error.Printf("Unable to get instance id from aws meta client : %s %v", err.Error(), err)
 			os.Exit(4)
 		}
 
@@ -105,7 +105,7 @@ func findAZ(metaClient *ec2metadata.EC2Metadata) (string) {
 	az, err := metaClient.GetMetadata("placement/availability-zone")
 
 	if err != nil {
-		awsLogger.Error.Printf("Unable to get az from aws meta client %s", err)
+		awsLogger.Error.Printf("Unable to get az from aws meta client : %s %v", err.Error(), err)
 		os.Exit(5)
 	}
 
@@ -129,7 +129,7 @@ func findInstanceName(instanceId string, region string, session *awsSession.Sess
 	resp, err := ec2Service.DescribeInstances(params)
 
 	if err != nil {
-		awsLogger.Error.Printf("Unable to get instance name tag DescribeInstances failed %s", err)
+		awsLogger.Error.Printf("Unable to get instance name tag DescribeInstances failed : %s %v", err.Error(), err)
 		return name
 	}
 
