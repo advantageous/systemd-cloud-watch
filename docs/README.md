@@ -78,12 +78,12 @@ this tool will work.
 There are instructions on how to install the Linux requirements for development below see - 
 [Setting up a Linux env for testing/developing (CentOS7)](#setting-up-a-linux-env-for-testingdeveloping-centos7).
 
-We also have two excellent examples of setting up a dev environment using [packer](https://www.packer.io/) for both 
+We also have two excellent examples of setting up a dev environment using [bin.packer](https://www.packer.io/) for both 
 [AWS EC2](#building-the-ec2-image-with-packer-to-build-the-linux-instance-to-build-this-project) and 
 [Docker](#building-the-docker-image-to-build-the-linux-instance-to-build-this-project). We setup CentoOS 7.
-The EC2 instance packer build uses the ***aws command line*** to create and connect to a running image. 
+The EC2 instance bin.packer build uses the ***aws command line*** to create and connect to a running image. 
 These should be instructive for how to setup this utility in your environment to run with ***systemd*** as we provide
-all of the systemd scripts in the packer provision scripts for EC2.  An example is good. A running example is better.
+all of the systemd scripts in the bin.packer provision scripts for EC2.  An example is good. A running example is better.
 
 ## Configuration
 
@@ -257,14 +257,14 @@ latest: Pulling from advantageous/golang-cloud-watch
 Digest: sha256:eaf5c0a387aee8cc2d690e1c5e18763e12beb7940ca0960ce1b9742229413e71
 Status: Image is up to date for advantageous/golang-cloud-watch:latest
 [root@6e0d1f984c03 /]# cd gopath/src/github.com/advantageous/systemd-cloud-watch/
-.git/                      README.md                  cloud-watch/               packer/                    sample.conf                
+.git/                      README.md                  cloud-watch/               bin.packer/                    sample.conf                
 .gitignore                 build_linux.sh             main.go                    run_build_linux.sh         systemd-cloud-watch.iml    
 .idea/                     cgroup/                    output.json                run_test_container.sh      systemd-cloud-watch_linux  
 
 [root@6e0d1f984c03 /]# cd gopath/src/github.com/advantageous/systemd-cloud-watch/
 
 [root@6e0d1f984c03 systemd-cloud-watch]# ls
-README.md  build_linux.sh  cgroup  cloud-watch  main.go  output.json  packer  run_build_linux.sh  
+README.md  build_linux.sh  cgroup  cloud-watch  main.go  output.json  bin.packer  run_build_linux.sh  
 run_test_container.sh  sample.conf  systemd-cloud-watch.iml  systemd-cloud-watch_linux
 
 [root@6e0d1f984c03 systemd-cloud-watch]# source ~/.bash_profile
@@ -336,28 +336,28 @@ ok  	github.com/advantageous/systemd-cloud-watch/cloud-watch	10.017s
 
 ```sh
 # from project root
-cd packer
-packer build packer_docker.json
+cd bin.packer
+bin.packer build packer_docker.json
 ```
 
 
 #### To run docker dev image
 ```sh
 # from project root
-cd packer
+cd bin.packer
 ./run.sh
 
 ```
 
-#### Building the ec2 image with packer to build the linux instance to build this project
+#### Building the ec2 image with bin.packer to build the linux instance to build this project
 
 ```sh
 # from project root
-cd packer
-packer build packer_ec2.json
+cd bin.packer
+bin.packer build packer_ec2.json
 ```
 
-We use the [docker](https://www.packer.io/docs/builders/docker.html) support for [packer](https://www.packer.io/).
+We use the [docker](https://www.packer.io/docs/builders/docker.html) support for [bin.packer](https://www.packer.io/).
 ("Packer is a tool for creating machine and container images for multiple platforms from a single source configuration.")
 
 Use `ec2_env.sh_example` to create a `ec2_env.sh` with the instance id that was just created. 
@@ -376,7 +376,7 @@ export key_name=MY_PEM_FILE_KEY_NAME
 ##### Using EC2 image (assumes you have ~/.ssh config setup)
 ```sh
 # from project root
-cd packer
+cd bin.packer
 
 # Run and log into dev env running in EC2
 ./runEc2Dev.sh

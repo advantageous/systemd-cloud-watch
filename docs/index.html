@@ -89,12 +89,12 @@ this tool will work.</p>
 <p>There are instructions on how to install the Linux requirements for development below see - 
 <a href="#setting-up-a-linux-env-for-testingdeveloping-centos7">Setting up a Linux env for testing/developing (CentOS7)</a>.</p>
 
-<p>We also have two excellent examples of setting up a dev environment using <a href="https://www.packer.io/">packer</a> for both 
+<p>We also have two excellent examples of setting up a dev environment using <a href="https://www.packer.io/">bin.packer</a> for both
 <a href="#building-the-ec2-image-with-packer-to-build-the-linux-instance-to-build-this-project">AWS EC2</a> and 
 <a href="#building-the-docker-image-to-build-the-linux-instance-to-build-this-project">Docker</a>. We setup CentoOS 7.
-The EC2 instance packer build uses the <strong><em>aws command line</em></strong> to create and connect to a running image. 
+The EC2 instance bin.packer build uses the <strong><em>aws command line</em></strong> to create and connect to a running image.
 These should be instructive for how to setup this utility in your environment to run with <strong><em>systemd</em></strong> as we provide
-all of the systemd scripts in the packer provision scripts for EC2.  An example is good. A running example is better.</p>
+all of the systemd scripts in the bin.packer provision scripts for EC2.  An example is good. A running example is better.</p>
 
 <h2>
 <a id="configuration" class="anchor" href="#configuration" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Configuration</h2>
@@ -256,14 +256,14 @@ latest: Pulling from advantageous/golang-cloud-watch
 Digest: sha256:eaf5c0a387aee8cc2d690e1c5e18763e12beb7940ca0960ce1b9742229413e71
 Status: Image is up to date <span class="pl-k">for</span> advantageous/golang-cloud-watch:latest
 [root@6e0d1f984c03 /]<span class="pl-c"># cd gopath/src/github.com/advantageous/systemd-cloud-watch/</span>
-.git/                      README.md                  cloud-watch/               packer/                    sample.conf                
+.git/                      README.md                  cloud-watch/               bin.packer/                    sample.conf
 .gitignore                 build_linux.sh             main.go                    run_build_linux.sh         systemd-cloud-watch.iml    
 .idea/                     cgroup/                    output.json                run_test_container.sh      systemd-cloud-watch_linux  
 
 [root@6e0d1f984c03 /]<span class="pl-c"># cd gopath/src/github.com/advantageous/systemd-cloud-watch/</span>
 
 [root@6e0d1f984c03 systemd-cloud-watch]<span class="pl-c"># ls</span>
-README.md  build_linux.sh  cgroup  cloud-watch  main.go  output.json  packer  run_build_linux.sh  
+README.md  build_linux.sh  cgroup  cloud-watch  main.go  output.json  bin.packer  run_build_linux.sh
 run_test_container.sh  sample.conf  systemd-cloud-watch.iml  systemd-cloud-watch_linux
 
 [root@6e0d1f984c03 systemd-cloud-watch]<span class="pl-c"># source ~/.bash_profile</span>
@@ -331,25 +331,25 @@ ok      github.com/advantageous/systemd-cloud-watch/cloud-watch 10.017s</pre></d
 <a id="building-the-docker-image-to-build-the-linux-instance-to-build-this-project" class="anchor" href="#building-the-docker-image-to-build-the-linux-instance-to-build-this-project" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Building the docker image to build the linux instance to build this project</h4>
 
 <div class="highlight highlight-source-shell"><pre><span class="pl-c"># from project root</span>
-<span class="pl-c1">cd</span> packer
-packer build packer_docker.json</pre></div>
+<span class="pl-c1">cd</span> bin.packer
+bin.packer build packer_docker.json</pre></div>
 
 <h4>
 <a id="to-run-docker-dev-image" class="anchor" href="#to-run-docker-dev-image" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>To run docker dev image</h4>
 
 <div class="highlight highlight-source-shell"><pre><span class="pl-c"># from project root</span>
-<span class="pl-c1">cd</span> packer
+<span class="pl-c1">cd</span> bin.packer
 ./run.sh
 </pre></div>
 
 <h4>
-<a id="building-the-ec2-image-with-packer-to-build-the-linux-instance-to-build-this-project" class="anchor" href="#building-the-ec2-image-with-packer-to-build-the-linux-instance-to-build-this-project" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Building the ec2 image with packer to build the linux instance to build this project</h4>
+<a id="building-the-ec2-image-with-packer-to-build-the-linux-instance-to-build-this-project" class="anchor" href="#building-the-ec2-image-with-packer-to-build-the-linux-instance-to-build-this-project" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Building the ec2 image with bin.packer to build the linux instance to build this project</h4>
 
 <div class="highlight highlight-source-shell"><pre><span class="pl-c"># from project root</span>
-<span class="pl-c1">cd</span> packer
-packer build packer_ec2.json</pre></div>
+<span class="pl-c1">cd</span> bin.packer
+bin.packer build packer_ec2.json</pre></div>
 
-<p>We use the <a href="https://www.packer.io/docs/builders/docker.html">docker</a> support for <a href="https://www.packer.io/">packer</a>.
+<p>We use the <a href="https://www.packer.io/docs/builders/docker.html">docker</a> support for <a href="https://www.packer.io/">bin.packer</a>.
 ("Packer is a tool for creating machine and container images for multiple platforms from a single source configuration.")</p>
 
 <p>Use <code>ec2_env.sh_example</code> to create a <code>ec2_env.sh</code> with the instance id that was just created. </p>
@@ -370,7 +370,7 @@ export key_name=MY_PEM_FILE_KEY_NAME
 <a id="using-ec2-image-assumes-you-have-ssh-config-setup" class="anchor" href="#using-ec2-image-assumes-you-have-ssh-config-setup" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Using EC2 image (assumes you have ~/.ssh config setup)</h5>
 
 <div class="highlight highlight-source-shell"><pre><span class="pl-c"># from project root</span>
-<span class="pl-c1">cd</span> packer
+<span class="pl-c1">cd</span> bin.packer
 
 <span class="pl-c"># Run and log into dev env running in EC2</span>
 ./runEc2Dev.sh

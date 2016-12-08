@@ -2,10 +2,4 @@
 systemd-cloud-watch
 systemd-cloud-watch.iml
 systemd-cloud-watch_linux
-packer/ec2_env.sh
-
-
-
-packer/ec2_env.sh
-
-packer/ec2_env.sh
+bin/packer/ec2_env.sh
