@@ -189,26 +189,25 @@ func (repeater *CloudWatchJournalRepeater) WriteBatch(records []Record) error {
 				if err != nil {
 					return err
 				}
-			}
-			if awsErr.Code() == "DataAlreadyAcceptedException" {
+			} else if awsErr.Code() == "DataAlreadyAcceptedException" {
 				// This batch was already sent?
 				repeater.logger.Error.Printf("DataAlreadyAcceptedException from putEvents : %s %v", err.Error(), err)
 				err = getNextToken()
 				if err != nil {
 					return fmt.Errorf("Next token failed after DataAlreadyAcceptedException :  %s %v", err.Error(), err)
 				}
-			}
-			if awsErr.Code() == "InvalidSequenceTokenException" {
+			} else if awsErr.Code() == "InvalidSequenceTokenException" {
 				repeater.logger.Error.Printf("InvalidSequenceTokenException from putEvents : %s %v", err.Error(), err)
 				err = getNextToken()
 				if err != nil {
 					return fmt.Errorf("Next token failed after InvalidSequenceTokenException : %s %v", err.Error(), err)
 				}
+			} else {
+				repeater.logger.Error.Printf("Error from putEvents : %s %v", originalErr.Error(), originalErr)
+				return fmt.Errorf("failed to put events: : %s %v", originalErr.Error(), originalErr)
 			}
 		}
 
-		repeater.logger.Error.Printf("Error from putEvents : %s %v", originalErr.Error(), originalErr)
-		return fmt.Errorf("failed to put events: : %s %v", originalErr.Error(), originalErr)
 	} else {
 		if (repeater.config.Debug) {
 			repeater.logger.Info.Println("SENT SUCCESSFULLY")

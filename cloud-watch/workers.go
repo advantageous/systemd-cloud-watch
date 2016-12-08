@@ -272,7 +272,7 @@ func RunWorkers(journal Journal, repeater JournalRepeater, logger *Logger, confi
 			for _,item := range batch {
 				logger.Error.Println("Unable to write batch item %+v", item)
 			}
-			logger.Error.Println("Failed to write to cloudwatch batch size = : %s %v", len(batch), err.Error(), err)
+			logger.Error.Println("Failed to write to cloudwatch batch size = : %d %s %v", len(batch), err.Error(), err)
 		}
 	}
 }
