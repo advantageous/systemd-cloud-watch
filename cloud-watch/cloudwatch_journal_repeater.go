@@ -179,8 +179,10 @@ func (repeater *CloudWatchJournalRepeater) WriteBatch(records []Record) error {
 		getNextToken()
 	}
 
+	var originalErr error
 	err := putEvents()
 	if err != nil {
+		originalErr = err
 		if awsErr, ok := err.(awserr.Error); ok {
 			if awsErr.Code() == "ResourceNotFoundException" {
 				err = recoverResourceNotFound(awsErr)
@@ -204,8 +206,9 @@ func (repeater *CloudWatchJournalRepeater) WriteBatch(records []Record) error {
 				}
 			}
 		}
-		repeater.logger.Error.Printf("Error from putEvents : %s %v", err.Error(), err)
-		return fmt.Errorf("failed to put events: : %s %v", err.Error(), err)
+
+		repeater.logger.Error.Printf("Error from putEvents : %s %v", originalErr.Error(), originalErr)
+		return fmt.Errorf("failed to put events: : %s %v", originalErr.Error(), originalErr)
 	} else {
 		if (repeater.config.Debug) {
 			repeater.logger.Info.Println("SENT SUCCESSFULLY")
