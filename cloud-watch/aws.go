@@ -70,16 +70,31 @@ func getRegion(client *ec2metadata.EC2Metadata, config *Config, session *awsSess
 		}
 
 		if config.LogStreamName == "" {
-			var az, name string
+			var az, name, ip string
 			az = findAZ(client)
+			ip = findLocalIp(client)
+
+
 			name = findInstanceName(config.EC2InstanceId, config.AWSRegion, session)
-			config.LogStreamName = name + "-" + config.EC2InstanceId + "-" + az
+			config.LogStreamName = name + "-" + ip + "-" + az + "-"
 			awsLogger.Info.Printf("LogStreamName was not set so using %s \n", config.LogStreamName)
 		}
 
 
 		return region
 	}
+
+}
+func findLocalIp(metaClient *ec2metadata.EC2Metadata) string {
+	ip, err := metaClient.GetMetadata("local-ipv4")
+
+
+	if err != nil {
+		awsLogger.Error.Printf("Unable to get private ip address from aws meta client : %s %v", err.Error(), err)
+		os.Exit(6)
+	}
+
+	return ip
 
 }
 
@@ -103,6 +118,8 @@ func getCredentials(client *ec2metadata.EC2Metadata) *awsCredentials.Credentials
 func findAZ(metaClient *ec2metadata.EC2Metadata) (string) {
 
 	az, err := metaClient.GetMetadata("placement/availability-zone")
+
+
 
 	if err != nil {
 		awsLogger.Error.Printf("Unable to get az from aws meta client : %s %v", err.Error(), err)
