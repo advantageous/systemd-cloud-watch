@@ -77,7 +77,7 @@ func getRegion(client *ec2metadata.EC2Metadata, config *Config, session *awsSess
 
 
 			name = findInstanceName(config.EC2InstanceId, config.AWSRegion, session)
-			config.LogStreamName = name + "-" + strings.Replace(ip, ".", "-", -1) + "-" + az + "-"
+			config.LogStreamName = name + "-" + strings.Replace(ip, ".", "-", -1) + "-" + az
 			awsLogger.Info.Printf("LogStreamName was not set so using %s \n", config.LogStreamName)
 		}
 
