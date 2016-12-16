@@ -60,9 +60,9 @@ type Record struct {
 }
 
 func NewRecord(journal Journal, logger *Logger, config *Config) (*Record, error) {
-	record := Record{}
+	record := &Record{}
 
-	err := decodeRecord(journal, reflect.ValueOf(&record).Elem(), logger, config)
+	err := decodeRecord(journal, reflect.ValueOf(record).Elem(), logger, config)
 
 	if record.TimeUsec == 0 {
 
@@ -75,7 +75,7 @@ func NewRecord(journal Journal, logger *Logger, config *Config) (*Record, error)
 		}
 	}
 
-	return &record, err
+	return record, err
 }
 
 func decodeRecord(journal Journal, toVal reflect.Value, logger *Logger, config *Config) error {

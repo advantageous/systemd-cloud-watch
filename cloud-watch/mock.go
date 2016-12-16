@@ -27,7 +27,7 @@ func (repeater *MockJournalRepeater) Close() error {
 	return nil
 }
 
-func (repeater *MockJournalRepeater) WriteBatch(records []Record) error {
+func (repeater *MockJournalRepeater) WriteBatch(records []*Record) error {
 
 	for _, record := range records {
 
@@ -87,6 +87,7 @@ func NewJournalWithMap(values map[string]string) Journal {
 	return &TestJournal{
 		values: values,
 		logger: logger,
+		count: 113,
 	}
 }
 
@@ -98,20 +99,17 @@ func (journal *TestJournal) Close() error {
 
 // Next advances the read pointer into the journal by one entry.
 func (journal *TestJournal) Next() (uint64, error) {
-	journal.logger.Info.Println("Next")
+	journal.logger.Debug.Println("Next")
 
-	var count uint64
+	var count  = atomic.LoadInt64(&journal.count)
 
-	if (journal.count > 0) {
-		count = uint64(journal.count)
+	if count > 0 {
 		atomic.AddInt64(&journal.count, -1)
+		return uint64(1), nil
 	} else {
-		count = 0
+		return uint64(0), nil
 	}
 
-
-
-	return uint64(count), nil
 
 }
 
@@ -141,7 +139,7 @@ func (journal *TestJournal) GetDataValue(field string) (string, error) {
 	if journal.count < 0 {
 		panic("ARGH")
 	}
-	journal.logger.Info.Println("GetDataValue")
+	journal.logger.Debug.Println("GetDataValue")
 	return journal.values[field], nil
 }
 

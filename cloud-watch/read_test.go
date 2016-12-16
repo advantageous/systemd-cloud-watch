@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 	"errors"
+	"fmt"
 )
 
 
@@ -37,75 +38,6 @@ debug=true
 
 
 
-func TestReadFromJournalSuccess(t *testing.T) {
-
-	logger := NewSimpleLogger("read-config-test", nil)
-	var journal MockJournal
-	journal = NewJournalWithMap(readTestMap).(MockJournal)
-
-	config, _ := LoadConfigFromString(readTestConfigData, logger)
-	records := make(chan Record)
-
-
-	journal.SetCount(1)
-
-
-	go ReadOneRecord(journal, records, logger, config, "foo-bar")
-
-	var record Record
-	var more bool
-
- 	record, more = <-records
-
-
-	if !more  {
-		t.Fail()
-	}
-
-	if record == (Record{}) {
-		t.Fail()
-	}
-
-}
-
-
-
-func TestReadFromJournalTimeout(t *testing.T) {
-
-	logger := NewSimpleLogger("read-config-test", nil)
-	var journal MockJournal
-	journal = NewJournalWithMap(readTestMap).(MockJournal)
-
-	config, _ := LoadConfigFromString(readTestConfigData, logger)
-	inputRecordChannel := make(chan Record)
-
-	journal.SetCount(0)
-	go ReadOneRecord(journal, inputRecordChannel, logger, config, "foo-bar")
-
-	var record Record
-	var more bool
-
-
-	timer := time.NewTimer(time.Millisecond * 50)
-
-	select {
-	case record, more = <-inputRecordChannel:
-		if !more {
-			return
-		}
-
-		if record != (Record{}) {
-			t.Fail()
-		}
-	case <-timer.C:
-
-		logger.Info.Println("Timed out like expeccted")
-	}
-
-
-}
-
-
 
 func TestReadFromJournalError(t *testing.T) {
 
@@ -118,9 +50,15 @@ func TestReadFromJournalError(t *testing.T) {
 
 	journal.SetError(errors.New("TEST ERROR"))
 	journal.SetCount(1)
+	runner := NewRunnerInternal(journal, NewMockJournalRepeater(), logger, config, false)
 
-	go ReadOneRecord(journal, inputRecordChannel, logger, config, "foo-bar")
+	go func() {
 
+		record, _, _ := runner.readOneRecord()
+		inputRecordChannel<-*record
+	}()
+
+	defer runner.Stop()
 	var record Record
 	var more bool
 
@@ -153,50 +91,25 @@ func TestReadAllFromJournal(t *testing.T) {
 	journal = NewJournalWithMap(readTestMap).(MockJournal)
 
 	config, _ := LoadConfigFromString(readTestConfigData, logger)
-	inputRecordChannel := make(chan Record)
 
 	journal.SetError(errors.New("TEST ERROR"))
 
 	journal.SetCount(10)
 
-	go ReadRecords(journal, inputRecordChannel, logger, config)
+	runner := NewRunnerInternal(journal, NewMockJournalRepeater(), logger, config, false)
+	runner.Stop()
+	go runner.readRecords()
 
-	for index:=0; index < 10; index++ {
-		logger.Info.Println("Index", index)
+	inputQueue := runner.queueManager.Queue().ReceiveQueue()
 
-		var record Record
+	count := 0
+	batch := inputQueue.ReadBatchWait()
 
-		timer := time.NewTimer(time.Millisecond * 1000)
-
-		select {
-		case record = <-inputRecordChannel:
-
-			if record == (Record{}) {
-				logger.Info.Println("FAIL")
-			}
-			timer.Stop()
-		case <-timer.C:
-			t.Fatal("Timeout")
-
-		}
-
+	for  {
+		if batch==nil {break}
+		count+=len(batch)
+		inputQueue.ReadBatchWait()
 	}
 
-
-	timer := time.NewTimer(time.Millisecond * 50)
-
-
-	record := Record{}
-
-	select {
-	case record = <-inputRecordChannel:
-		if record != (Record{}) {
-			t.Fatal("RECORD NOT EMPTY", record.SeqId)
-		}
-	case <-timer.C:
-
-		logger.Info.Println("Timed out like expeccted")
-	}
-
-
+	fmt.Println("COUNT ", count, "                                                      \n\n\n")
 }

@@ -5,7 +5,7 @@ import "time"
 type JournalRepeater interface {
 	// Close closes a journal opened with NewJournal.
 	Close() error;
-	WriteBatch(records []Record) error;
+	WriteBatch(records []*Record) error;
 }
 
 type Journal interface {

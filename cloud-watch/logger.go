@@ -17,7 +17,7 @@ type Logger struct {
 func NewSimpleLogger(name string, config *Config) *Logger {
 
 	if (config == nil) {
-		return NewLogger(name, os.Stdout, os.Stdout, os.Stdout, os.Stderr)
+		return NewLogger(name, ioutil.Discard, os.Stdout, os.Stdout, os.Stderr)
 	} else if config.Debug {
 		return NewLogger(name, os.Stdout, os.Stdout, os.Stdout, os.Stderr)
 	} else {
