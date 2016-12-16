@@ -1,15 +1,15 @@
 package cloud_watch
 
 import (
-	"time"
 	"github.com/coreos/go-systemd/sdjournal"
 	"strconv"
+	"time"
 )
 
 type SdJournal struct {
 	journal *sdjournal.Journal
 	logger  *Logger
-	debug bool
+	debug   bool
 }
 
 func NewJournal(config *Config) (Journal, error) {
@@ -40,7 +40,6 @@ func NewJournal(config *Config) (Journal, error) {
 
 }
 
-
 func (journal *SdJournal) AddLogFilters(config *Config) {
 
 	// Add Priority Filters
@@ -58,17 +57,15 @@ func (journal *SdJournal) Close() error {
 	return journal.journal.Close()
 }
 
-
 // Next advances the read pointer into the journal by one entry.
 func (journal *SdJournal) Next() (uint64, error) {
 	loc, err := journal.journal.Next()
-	if (journal.debug) {
+	if journal.debug {
 		journal.logger.Info.Printf("NEXT location %d %v", loc, err)
 	}
 
 	return loc, err
 }
-
 
 // NextSkip advances the read pointer by multiple entries at once,
 // as specified by the skip parameter.
@@ -93,7 +90,6 @@ func (journal *SdJournal) GetDataValue(field string) (string, error) {
 	return journal.journal.GetDataValue(field)
 }
 
-
 // GetRealtimeUsec gets the realtime (wallclock) timestamp of the current
 // journal entry.
 func (journal *SdJournal) GetRealtimeUsec() (uint64, error) {
@@ -109,7 +105,6 @@ func (journal *SdJournal) GetMonotonicUsec() (uint64, error) {
 func (journal *SdJournal) GetCursor() (string, error) {
 	return journal.journal.GetCursor()
 }
-
 
 // SeekHead seeks to the beginning of the journal, i.e. the oldest available
 // entry.

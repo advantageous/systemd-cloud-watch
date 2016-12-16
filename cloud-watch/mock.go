@@ -1,26 +1,25 @@
 package cloud_watch
 
 import (
-	"time"
 	"sync/atomic"
+	"time"
 )
 
 type MockJournal interface {
 	Journal
 	SetCount(uint64)
-	SetError (error)
-
+	SetError(error)
 }
 
 type TestJournal struct {
-	values  map[string]string
-	logger  *Logger
-	count   int64
-	err     error
+	values map[string]string
+	logger *Logger
+	count  int64
+	err    error
 }
 
 type MockJournalRepeater struct {
-	logger  *Logger
+	logger *Logger
 }
 
 func (repeater *MockJournalRepeater) Close() error {
@@ -69,11 +68,9 @@ func NewMockJournalRepeater() (repeater *MockJournalRepeater) {
 	return &MockJournalRepeater{NewSimpleLogger("mock-repeater", nil)}
 }
 
-
 func (journal *TestJournal) SetCount(count uint64) {
 
 	atomic.StoreInt64(&journal.count, int64(count))
-
 
 }
 
@@ -87,7 +84,7 @@ func NewJournalWithMap(values map[string]string) Journal {
 	return &TestJournal{
 		values: values,
 		logger: logger,
-		count: 113,
+		count:  113,
 	}
 }
 
@@ -96,12 +93,11 @@ func (journal *TestJournal) Close() error {
 	return nil
 }
 
-
 // Next advances the read pointer into the journal by one entry.
 func (journal *TestJournal) Next() (uint64, error) {
 	journal.logger.Debug.Println("Next")
 
-	var count  = atomic.LoadInt64(&journal.count)
+	var count = atomic.LoadInt64(&journal.count)
 
 	if count > 0 {
 		atomic.AddInt64(&journal.count, -1)
@@ -109,7 +105,6 @@ func (journal *TestJournal) Next() (uint64, error) {
 	} else {
 		return uint64(0), nil
 	}
-
 
 }
 
@@ -143,7 +138,6 @@ func (journal *TestJournal) GetDataValue(field string) (string, error) {
 	return journal.values[field], nil
 }
 
-
 // GetRealtimeUsec gets the realtime (wallclock) timestamp of the current
 // journal entry.
 func (journal *TestJournal) GetRealtimeUsec() (uint64, error) {
@@ -166,7 +160,6 @@ func (journal *TestJournal) GetCursor() (string, error) {
 	journal.logger.Info.Println("GetCursor")
 	return "abc-123", nil
 }
-
 
 // SeekHead seeks to the beginning of the journal, i.e. the oldest available
 // entry.

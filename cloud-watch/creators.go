@@ -1,6 +1,5 @@
 package cloud_watch
 
-
 func CreateConfig(configFilename string, logger *Logger) *Config {
 
 	config, err := LoadConfig(configFilename, logger)

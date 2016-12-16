@@ -2,11 +2,11 @@ package cloud_watch
 
 import (
 	"fmt"
-	"time"
+	q "github.com/advantageous/go-qbit/qbit"
 	"os"
 	"os/signal"
 	"syscall"
-	q "github.com/advantageous/go-qbit/qbit"
+	"time"
 )
 
 type Runner struct {
@@ -39,7 +39,6 @@ func (r *Runner) addToCloudWatchBatch(record *Record) {
 
 func (r *Runner) sendBatch() {
 
-
 	if len(r.records) > 0 {
 		batchToSend := r.records
 		r.records = make([]*Record, 0)
@@ -59,11 +58,11 @@ func NewRunnerInternal(journal Journal, repeater JournalRepeater, logger *Logger
 	}
 	r := &Runner{journal: journal,
 		journalRepeater: repeater,
-		logger:logger,
-		config: config,
-		debug:config.Debug,
-		instanceId:config.EC2InstanceId,
-		bufferSize: config.BufferSize}
+		logger:          logger,
+		config:          config,
+		debug:           config.Debug,
+		instanceId:      config.EC2InstanceId,
+		bufferSize:      config.BufferSize}
 
 	if logger == nil {
 		logger = NewSimpleLogger("record reader ", config)
@@ -78,10 +77,10 @@ func NewRunnerInternal(journal Journal, repeater JournalRepeater, logger *Logger
 			r.sendBatch()
 			r.batchCounter++
 		},
-		IdleFunc:func() {
+		IdleFunc: func() {
 			r.sendBatch()
 			now := time.Now().Unix()
-			if now - r.lastMetricTime > 120 {
+			if now-r.lastMetricTime > 120 {
 				now = r.lastMetricTime
 				r.logger.Info.Printf("Systemd CloudWatch: batches sent %d, idleCount %d,  emptyCount %d",
 					r.batchCounter, r.idleCounter, r.emptyCounter)
@@ -158,7 +157,7 @@ func (r *Runner) readRecords() {
 
 		record, isReadRecord, err := r.readOneRecord()
 
-		if err == nil && isReadRecord && record!=nil  {
+		if err == nil && isReadRecord && record != nil {
 			sendQueue.Send(record)
 		}
 

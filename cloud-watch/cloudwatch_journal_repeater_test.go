@@ -1,9 +1,9 @@
 package cloud_watch
 
 import (
+	"strings"
 	"testing"
 	"time"
-	"strings"
 )
 
 func TestRepeater(t *testing.T) {
@@ -32,8 +32,8 @@ log_group="test-group"
 	}
 
 	records := []*Record{
-		{Message:"Hello mom", TimeUsec:time.Now().Unix() * 1000},
-		{Message:"Hello dad", TimeUsec:time.Now().Unix() * 1000},
+		{Message: "Hello mom", TimeUsec: time.Now().Unix() * 1000},
+		{Message: "Hello dad", TimeUsec: time.Now().Unix() * 1000},
 	}
 	err = repeater.WriteBatch(records)
 
