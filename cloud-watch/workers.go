@@ -167,6 +167,7 @@ func (r *Runner) readRecords() {
 
 		if !isReadRecord {
 			if r.queueManager.Stopped() {
+				r.logger.Info.Println("Got stop message")
 				break
 			}
 		}

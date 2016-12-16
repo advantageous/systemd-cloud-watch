@@ -3,3 +3,4 @@ systemd-cloud-watch
 systemd-cloud-watch.iml
 systemd-cloud-watch_linux
 bin/packer/ec2_env.sh
+/bin/aws.sh
