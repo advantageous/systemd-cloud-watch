@@ -155,7 +155,8 @@ discover and make use of instance profile credentials.
 
 The following IAM policy grants the required access across all log groups in all regions:
 
-```js
+#### IAM file
+```json
 {
     "Version": "2012-10-17",
     "Statement": [
@@ -589,6 +590,7 @@ You could for example create a *JournalRepeater* that writes to *InfluxDB* inste
 Improvements:
 
 * Added unit tests (there were none).
+* Heavily reduced locking by using [qbit](https://github.com/advantageous/go-qbit) instead of original implementation.
 * Added cross compile so I can develop/test on my laptop (MacOS).
 * Made logging stateless. No more need for a state file.
 * No more getting out of sync with CloudWatch.
@@ -605,6 +607,12 @@ Improvements:
 
 
 ## License
+
+The original work was from Say Media Inc. We had issues with it and did about a 90% rewrite.
+
+All additional work is covered under Apache 2.0 license.
+Copyright (c) 2016 Geoff Chandler, Rick Hightower
+
 
 Copyright (c) 2015 Say Media Inc
 
@@ -626,5 +634,3 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-All additional work is covered under Apache 2.0 license.
-Copyright (c) 2016 Geoff Chandler, Rick Hightower
