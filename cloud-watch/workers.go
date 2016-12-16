@@ -62,36 +62,41 @@ func NewRunnerInternal(journal Journal, repeater JournalRepeater, logger *Logger
 		config:          config,
 		debug:           config.Debug,
 		instanceId:      config.EC2InstanceId,
-		bufferSize:      config.BufferSize}
+		bufferSize:      config.CloudWatchBufferSize}
 
 	if logger == nil {
 		logger = NewSimpleLogger("record reader ", config)
 	}
 
-	r.queueManager = q.NewSimpleQueueManager(q.NewQueueListener(&q.QueueListener{
+	//
+	//r.queueManager = q.NewQueueManager( ?){
+	r.queueManager = q.NewQueueManager(config.QueueChannelSize,
+		config.QueueBatchSize,
+		time.Duration(config.QueuePollDurationMS) * time.Millisecond,
+		q.NewQueueListener(&q.QueueListener{
 
-		ReceiveFunc: func(item interface{}) {
-			r.addToCloudWatchBatch(item.(*Record))
-		},
-		EndBatchFunc: func() {
-			r.sendBatch()
-			r.batchCounter++
-		},
-		IdleFunc: func() {
-			r.sendBatch()
-			now := time.Now().Unix()
-			if now-r.lastMetricTime > 120 {
-				now = r.lastMetricTime
-				r.logger.Info.Printf("Systemd CloudWatch: batches sent %d, idleCount %d,  emptyCount %d",
-					r.batchCounter, r.idleCounter, r.emptyCounter)
-			}
-			r.idleCounter++
-		},
-		EmptyFunc: func() {
-			r.sendBatch()
-			r.emptyCounter++
-		},
-	}))
+			ReceiveFunc: func(item interface{}) {
+				r.addToCloudWatchBatch(item.(*Record))
+			},
+			EndBatchFunc: func() {
+				r.sendBatch()
+				r.batchCounter++
+			},
+			IdleFunc: func() {
+				r.sendBatch()
+				now := time.Now().Unix()
+				if now - r.lastMetricTime > 120 {
+					now = r.lastMetricTime
+					r.logger.Info.Printf("Systemd CloudWatch: batches sent %d, idleCount %d,  emptyCount %d",
+						r.batchCounter, r.idleCounter, r.emptyCounter)
+				}
+				r.idleCounter++
+			},
+			EmptyFunc: func() {
+				r.sendBatch()
+				r.emptyCounter++
+			},
+		}))
 
 	r.lastMetricTime = time.Now().Unix()
 	r.positionCursor()

@@ -6,24 +6,27 @@ import (
 )
 
 type Config struct {
-	AWSRegion      string   `hcl:"aws_region"`
-	EC2InstanceId  string   `hcl:"ec2_instance_id"`
-	LogGroupName   string   `hcl:"log_group"`
-	LogStreamName  string   `hcl:"log_stream"`
-	LogPriority    string   `hcl:"log_priority"`
-	JournalDir     string   `hcl:"journal_dir"`
-	BufferSize     int      `hcl:"buffer_size"`
-	Debug          bool     `hcl:"debug"`
-	Tail           bool     `hcl:"tail"`
-	Rewind         int      `hcl:"rewind"`
-	Local          bool     `hcl:"local"`
-	AllowedFields  []string `hcl:"fields"`
-	OmitFields     []string `hcl:"omit_fields"`
-	logPriority    int
-	fields         map[string]struct{}
-	omitFields     map[string]struct{}
-	FieldLength    int  `hcl:"field_length"`
-	MockCloudWatch bool `hcl:"mock-cloud-watch"`
+	AWSRegion            string   `hcl:"aws_region"`
+	EC2InstanceId        string   `hcl:"ec2_instance_id"`
+	LogGroupName         string   `hcl:"log_group"`
+	LogStreamName        string   `hcl:"log_stream"`
+	LogPriority          string   `hcl:"log_priority"`
+	JournalDir           string   `hcl:"journal_dir"`
+	QueueChannelSize     int      `hcl:"queue_channel_buffer_size"`
+	QueuePollDurationMS  int      `hcl:"queue_poll_duration_ms"`
+	QueueBatchSize       int      `hcl:"queue_batch_size"`
+	CloudWatchBufferSize int      `hcl:"buffer_size"`
+	Debug                bool     `hcl:"debug"`
+	Tail                 bool     `hcl:"tail"`
+	Rewind               int      `hcl:"rewind"`
+	Local                bool     `hcl:"local"`
+	AllowedFields        []string `hcl:"fields"`
+	OmitFields           []string `hcl:"omit_fields"`
+	logPriority          int
+	fields               map[string]struct{}
+	omitFields           map[string]struct{}
+	FieldLength          int  `hcl:"field_length"`
+	MockCloudWatch       bool `hcl:"mock-cloud-watch"`
 }
 
 func (config *Config) GetJournalDLogPriority() Priority {
@@ -96,9 +99,24 @@ func LoadConfigFromString(data string, logger *Logger) (*Config, error) {
 	config.fields = arrayToMap(config.AllowedFields)
 	config.omitFields = arrayToMap(config.OmitFields)
 
-	if config.BufferSize == 0 {
-		logger.Debug.Println("Loading log... BufferSize not set, setting to 10")
-		config.BufferSize = 10
+	if config.CloudWatchBufferSize == 0 {
+		logger.Debug.Println("Loading log... cloud watch BufferSize not set, setting to 10")
+		config.CloudWatchBufferSize = 10
+	}
+
+	if config.QueueChannelSize == 0 {
+		logger.Debug.Println("Loading log... Queue Channel Size not set, setting to 3")
+		config.QueueChannelSize = 3
+	}
+
+	if config.QueueBatchSize == 0 {
+		logger.Debug.Println("Loading log... Queue Batch Size not set, setting to 10000")
+		config.QueueBatchSize = 10000
+	}
+
+	if config.QueuePollDurationMS == 0 {
+		logger.Debug.Println("Loading log... Queue Poll Duration MS not set, setting to 10")
+		config.QueuePollDurationMS = 10
 	}
 
 	if config.FieldLength == 0 {
