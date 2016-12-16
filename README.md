@@ -19,27 +19,23 @@ The journal event data is written to ***CloudWatch*** Logs in JSON format, makin
 Log records are translated to ***CloudWatch*** JSON events using a structure like the following:
 
 #### Sample log
-```javascript
+```json
 {
-    "instanceId": "i-xxxxxxxx",
-    "pid": 12354,
-    "uid": 0,
-    "gid": 0,
-    "cmdName": "cron",
-    "exe": "/usr/sbin/cron",
-    "cmdLine": "/usr/sbin/CRON -f",
-    "systemdUnit": "cron.service",
-    "bootId": "fa58079c7a6d12345678b6ebf1234567",
-    "hostname": "ip-10-1-0-15",
-    "transport": "syslog",
-    "priority": "INFO",
-    "message": "pam_unix(cron:session): session opened for user root by (uid=0)",
-    "syslog": {
-        "facility": 10,
-        "ident": "CRON",
-        "pid": 12354
-    },
-    "kernel": {}
+    "instanceId" : "i-xxxxxxxx",
+    "pid" : 12354,
+    "uid" : 0,
+    "gid" : 0,
+    "cmdName" : "cron",
+    "exe" : "/usr/sbin/cron",
+    "cmdLine" : "/usr/sbin/CRON -f",
+    "systemdUnit" : "cron.service",
+    "bootId" : "fa58079c7a6d12345678b6ebf1234567",
+    "hostname" : "ip-10-1-0-15",
+    "transport" : "syslog",
+    "priority" : "INFO",
+    "message" : "pam_unix(cron:session): session opened for user root by (uid=0)",
+    "syslogFacility" : 10,
+    "syslogIdent" : "CRON"
 }
 ```
 
@@ -107,11 +103,8 @@ The following configuration settings are supported:
   writing logs into the same log group) must have a unique `log_stream` value. If the given log stream
   doesn't exist then it will be created before writing the first set of journal events.
 
-* `buffer_size`: (Optional) The size of the local event buffer where journal events will be kept
-  in order to write batches of events to the CloudWatch Logs API. The default is 100. A batch of
-  new events will be written to CloudWatch Logs every second even if the buffer does not fill, but
-  this setting provides a maximum batch size to use when clearing a large backlog of events, e.g.
-  from system boot when the program starts for the first time.
+* `buffer_size`: (Optional) The size of the event buffer to send to CloudWatch Logs API. The default is 50.
+ This means that cloud watch will send 50 logs at a time. 
 
 * `fields`: (Optional) Specifies which fields should be included in the JSON map that is sent to CloudWatch.
 
@@ -119,6 +112,18 @@ The following configuration settings are supported:
 
 * `field_length`: (Optional) Specifies how long string fileds can be in the JSON  map that is sent to CloudWatch.
    The default is 255 characters.
+   
+*  `queue_batch_size` : (Optional) Internal. Default to 10,000 entries, how large the queue buffer is. This is chunks of log entries
+that can be sent to the cloud watch repeater.
+   
+*  `queue_channel_size`: (Optional) Internal.  Default to 3 entries, how large the queue buffer is. This is how many `queue_batch_size`
+can be around to send before the journald reader waits for the cloudwatch repeater. 
+
+*  `queue_poll_duration_ms` : (Optional) Internal. Default to 10 ms, how long the queue manager will wait if there are no log entries to send
+to check again to see if there are log entries to send. 
+
+*  `queue_flush_log_ms` : (Optional) If `queue_batch_size` has not been met because there are no more journald entries to 
+read, how long to flush the buffer to cloud watch receiver. Defaults to 100 ms.
 
 * `debug`: (Optional) Turns on debug logging.
 
@@ -132,6 +137,12 @@ logs in the system, which is the default behavior.
 
 * `mock-cloud-watch` : (Optional) Used to send logs to a Journal Repeater that just spits out message and priority to the console.
 This is used for development only. 
+
+
+If your average log message was 500 bytes, and your used the default setting then assuming the server was generating 
+journald messages rapidly you could use a heap of up to `queue_channel_size` (3) * `queue_batch_size`(10,000) * 500 bytes
+(15,000,000). If you had a very resource constrained env, reduce the `queue_batch_size` and/or the `queue_channel_size`.
+
 
 
 ### AWS API access

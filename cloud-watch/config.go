@@ -12,7 +12,7 @@ type Config struct {
 	LogStreamName        string   `hcl:"log_stream"`
 	LogPriority          string   `hcl:"log_priority"`
 	JournalDir           string   `hcl:"journal_dir"`
-	QueueChannelSize     int      `hcl:"queue_channel_buffer_size"`
+	QueueChannelSize     int      `hcl:"queue_channel_size"`
 	QueuePollDurationMS  uint64   `hcl:"queue_poll_duration_ms"`
 	FlushLogEntries      uint64   `hcl:"queue_flush_log_ms"`
 	QueueBatchSize       int      `hcl:"queue_batch_size"`
@@ -101,8 +101,8 @@ func LoadConfigFromString(data string, logger *Logger) (*Config, error) {
 	config.omitFields = arrayToMap(config.OmitFields)
 
 	if config.CloudWatchBufferSize == 0 {
-		logger.Debug.Println("Loading log... cloud watch BufferSize not set, setting to 10")
-		config.CloudWatchBufferSize = 10
+		logger.Debug.Println("Loading log... cloud watch BufferSize not set, setting to 50")
+		config.CloudWatchBufferSize = 50
 	}
 
 	if config.QueueChannelSize == 0 {
