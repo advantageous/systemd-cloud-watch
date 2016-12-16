@@ -47,11 +47,8 @@ func (repeater *CloudWatchJournalRepeater) WriteBatch(records []*Record) error {
 	logger := repeater.logger
 
 	events := make([]*cloudwatchlogs.InputLogEvent, 0, len(records))
-	for index, record := range records {
+	for _, record := range records {
 
-		if record == nil {
-			logger.Info.Println("RECORD WAS NULL", index, len(records))
-		}
 		messageId++
 		record.SeqId = messageId
 
@@ -60,10 +57,6 @@ func (repeater *CloudWatchJournalRepeater) WriteBatch(records []*Record) error {
 			return err
 		}
 		jsonData := string(jsonDataBytes)
-
-		//if debug {
-		//	logger.Info.Println("Sending record ", record.TimeUsec, jsonData)
-		//}
 
 		events = append(events, &cloudwatchlogs.InputLogEvent{
 			Message:   aws.String(jsonData),
