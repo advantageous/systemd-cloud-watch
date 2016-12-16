@@ -13,7 +13,8 @@ type Config struct {
 	LogPriority          string   `hcl:"log_priority"`
 	JournalDir           string   `hcl:"journal_dir"`
 	QueueChannelSize     int      `hcl:"queue_channel_buffer_size"`
-	QueuePollDurationMS  int      `hcl:"queue_poll_duration_ms"`
+	QueuePollDurationMS  uint64   `hcl:"queue_poll_duration_ms"`
+	FlushLogEntries      uint64   `hcl:"queue_flush_log_ms"`
 	QueueBatchSize       int      `hcl:"queue_batch_size"`
 	CloudWatchBufferSize int      `hcl:"buffer_size"`
 	Debug                bool     `hcl:"debug"`
@@ -114,8 +115,13 @@ func LoadConfigFromString(data string, logger *Logger) (*Config, error) {
 		config.QueueBatchSize = 10000
 	}
 
+	if config.FlushLogEntries == 0 {
+		logger.Debug.Println("Loading log... Flush JournalD log entries not set, setting to 100 ms")
+		config.FlushLogEntries = 100
+	}
+
 	if config.QueuePollDurationMS == 0 {
-		logger.Debug.Println("Loading log... Queue Poll Duration MS not set, setting to 10")
+		logger.Debug.Println("Loading log... Queue Poll Duration MS not set, setting to 10 ms")
 		config.QueuePollDurationMS = 10
 	}
 

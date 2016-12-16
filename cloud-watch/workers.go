@@ -68,11 +68,9 @@ func NewRunnerInternal(journal Journal, repeater JournalRepeater, logger *Logger
 		logger = NewSimpleLogger("record reader ", config)
 	}
 
-	//
-	//r.queueManager = q.NewQueueManager( ?){
 	r.queueManager = q.NewQueueManager(config.QueueChannelSize,
 		config.QueueBatchSize,
-		time.Duration(config.QueuePollDurationMS) * time.Millisecond,
+		time.Duration(config.QueuePollDurationMS)*time.Millisecond,
 		q.NewQueueListener(&q.QueueListener{
 
 			ReceiveFunc: func(item interface{}) {
@@ -85,7 +83,7 @@ func NewRunnerInternal(journal Journal, repeater JournalRepeater, logger *Logger
 			IdleFunc: func() {
 				r.sendBatch()
 				now := time.Now().Unix()
-				if now - r.lastMetricTime > 120 {
+				if now-r.lastMetricTime > 120 {
 					now = r.lastMetricTime
 					r.logger.Info.Printf("Systemd CloudWatch: batches sent %d, idleCount %d,  emptyCount %d",
 						r.batchCounter, r.idleCounter, r.emptyCounter)
@@ -156,7 +154,7 @@ func (r *Runner) readOneRecord() (*Record, bool, error) {
 
 func (r *Runner) readRecords() {
 
-	sendQueue := r.queueManager.SendQueueWithAutoFlush(100 * time.Millisecond)
+	sendQueue := r.queueManager.SendQueueWithAutoFlush(time.Duration(r.config.FlushLogEntries) * time.Millisecond)
 
 	for {
 
