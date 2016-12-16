@@ -11,13 +11,13 @@ type Priority int
 
 var (
 	EMERGENCY Priority = 0
-	ALERT Priority = 1
-	CRITICAL Priority = 2
-	ERROR Priority = 3
-	WARNING Priority = 4
-	NOTICE Priority = 5
-	INFO Priority = 6
-	DEBUG Priority = 7
+	ALERT     Priority = 1
+	CRITICAL  Priority = 2
+	ERROR     Priority = 3
+	WARNING   Priority = 4
+	NOTICE    Priority = 5
+	INFO      Priority = 6
+	DEBUG     Priority = 7
 )
 
 var PriorityJsonMap = map[Priority][]byte{
@@ -32,37 +32,37 @@ var PriorityJsonMap = map[Priority][]byte{
 }
 
 type Record struct {
-	InstanceId  string        `json:"instanceId,omitempty"`
-	TimeUsec    int64         `json:"-" journald:"__REALTIME_TIMESTAMP"`
-	PID         int           `json:"pid,omitempty" journald:"_PID"`
-	UID         int           `json:"uid,omitempty" journald:"_UID"`
-	GID         int           `json:"gid,omitempty" journald:"_GID"`
-	Command     string        `json:"cmdName,omitempty" journald:"_COMM"`
-	Executable  string        `json:"exe,omitempty" journald:"_EXE"`
-	CommandLine string        `json:"cmdLine,omitempty" journald:"_CMDLINE"`
-	SystemdUnit string        `json:"systemdUnit,omitempty" journald:"_SYSTEMD_UNIT"`
-	BootId      string        `json:"bootId,omitempty" journald:"_BOOT_ID"`
-	MachineId   string        `json:"machineId,omitempty" journald:"_MACHINE_ID"`
-	Hostname    string        `json:"hostname,omitempty" journald:"_HOSTNAME"`
-	Transport   string        `json:"transport,omitempty" journald:"_TRANSPORT"`
-	Priority    Priority      `json:"priority" journald:"PRIORITY"`
-	Message     string        `json:"message" journald:"MESSAGE"`
-	MessageId   string        `json:"messageId,omitempty" journald:"MESSAGE_ID"`
-	Errno       int           `json:"machineId,omitempty" journald:"ERRNO"`
-	SeqId       int64         `json:"seq,omitempty" `
-	Facility    int           `json:"syslogFacility,omitempty" journald:"SYSLOG_FACILITY"`
-	Identifier  string        `json:"syslogIdent,omitempty" journald:"SYSLOG_IDENTIFIER"`
-	SysPID      int           `json:"syslogPid,omitempty" journald:"SYSLOG_PID"`
-	Device      string        `json:"kernelDevice,omitempty" journald:"_KERNEL_DEVICE"`
-	Subsystem   string        `json:"kernelSubsystem,omitempty" journald:"_KERNEL_SUBSYSTEM"`
-	SysName     string        `json:"kernelSysName,omitempty" journald:"_UDEV_SYSNAME"`
-	DevNode     string        `json:"kernelDevNode,omitempty" journald:"_UDEV_DEVNODE"`
+	InstanceId  string   `json:"instanceId,omitempty"`
+	TimeUsec    int64    `json:"-" journald:"__REALTIME_TIMESTAMP"`
+	PID         int      `json:"pid,omitempty" journald:"_PID"`
+	UID         int      `json:"uid,omitempty" journald:"_UID"`
+	GID         int      `json:"gid,omitempty" journald:"_GID"`
+	Command     string   `json:"cmdName,omitempty" journald:"_COMM"`
+	Executable  string   `json:"exe,omitempty" journald:"_EXE"`
+	CommandLine string   `json:"cmdLine,omitempty" journald:"_CMDLINE"`
+	SystemdUnit string   `json:"systemdUnit,omitempty" journald:"_SYSTEMD_UNIT"`
+	BootId      string   `json:"bootId,omitempty" journald:"_BOOT_ID"`
+	MachineId   string   `json:"machineId,omitempty" journald:"_MACHINE_ID"`
+	Hostname    string   `json:"hostname,omitempty" journald:"_HOSTNAME"`
+	Transport   string   `json:"transport,omitempty" journald:"_TRANSPORT"`
+	Priority    Priority `json:"priority" journald:"PRIORITY"`
+	Message     string   `json:"message" journald:"MESSAGE"`
+	MessageId   string   `json:"messageId,omitempty" journald:"MESSAGE_ID"`
+	Errno       int      `json:"machineId,omitempty" journald:"ERRNO"`
+	SeqId       int64    `json:"seq,omitempty" `
+	Facility    int      `json:"syslogFacility,omitempty" journald:"SYSLOG_FACILITY"`
+	Identifier  string   `json:"syslogIdent,omitempty" journald:"SYSLOG_IDENTIFIER"`
+	SysPID      int      `json:"syslogPid,omitempty" journald:"SYSLOG_PID"`
+	Device      string   `json:"kernelDevice,omitempty" journald:"_KERNEL_DEVICE"`
+	Subsystem   string   `json:"kernelSubsystem,omitempty" journald:"_KERNEL_SUBSYSTEM"`
+	SysName     string   `json:"kernelSysName,omitempty" journald:"_UDEV_SYSNAME"`
+	DevNode     string   `json:"kernelDevNode,omitempty" journald:"_UDEV_DEVNODE"`
 }
 
 func NewRecord(journal Journal, logger *Logger, config *Config) (*Record, error) {
-	record := Record{}
+	record := &Record{}
 
-	err := decodeRecord(journal, reflect.ValueOf(&record).Elem(), logger, config)
+	err := decodeRecord(journal, reflect.ValueOf(record).Elem(), logger, config)
 
 	if record.TimeUsec == 0 {
 
@@ -75,7 +75,7 @@ func NewRecord(journal Journal, logger *Logger, config *Config) (*Record, error)
 		}
 	}
 
-	return &record, err
+	return record, err
 }
 
 func decodeRecord(journal Journal, toVal reflect.Value, logger *Logger, config *Config) error {
@@ -95,7 +95,7 @@ func decodeRecord(journal Journal, toVal reflect.Value, logger *Logger, config *
 			continue
 		}
 
-		if (!config.AllowField(jdKey)) {
+		if !config.AllowField(jdKey) {
 			continue
 		}
 
@@ -139,7 +139,7 @@ func decodeRecord(journal Journal, toVal reflect.Value, logger *Logger, config *
 }
 func trimField(value string, fieldLength int) string {
 
-	if (fieldLength == 0) {
+	if fieldLength == 0 {
 		fieldLength = 255
 	}
 

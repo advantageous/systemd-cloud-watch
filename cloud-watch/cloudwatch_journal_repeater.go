@@ -2,12 +2,12 @@ package cloud_watch
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	awsSession "github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
-	"errors"
 )
 
 var messageId = int64(0)
@@ -32,8 +32,8 @@ func NewCloudWatchJournalRepeater(sess *awsSession.Session, logger *Logger, conf
 		logGroupName:      config.LogGroupName,
 		logStreamName:     config.LogStreamName,
 		nextSequenceToken: "",
-		logger:logger,
-		config:config,
+		logger:            logger,
+		config:            config,
 	}, nil
 }
 
@@ -41,26 +41,29 @@ func (repeater *CloudWatchJournalRepeater) Close() error {
 	return nil
 }
 
-func (repeater *CloudWatchJournalRepeater) WriteBatch(records []Record) error {
+func (repeater *CloudWatchJournalRepeater) WriteBatch(records []*Record) error {
 
 	debug := repeater.config.Debug
 	logger := repeater.logger
 
 	events := make([]*cloudwatchlogs.InputLogEvent, 0, len(records))
-	for _, record := range records {
+	for index, record := range records {
 
+		if record == nil {
+			logger.Info.Println("RECORD WAS NULL", index, len(records))
+		}
 		messageId++
 		record.SeqId = messageId
 
-		jsonDataBytes, err := json.MarshalIndent(record, "", "  ")
+		jsonDataBytes, err := json.MarshalIndent(*record, "", "  ")
 		if err != nil {
 			return err
 		}
 		jsonData := string(jsonDataBytes)
 
-		if debug {
-			logger.Debug.Println("Sending record ", record.TimeUsec, jsonData)
-		}
+		//if debug {
+		//	logger.Info.Println("Sending record ", record.TimeUsec, jsonData)
+		//}
 
 		events = append(events, &cloudwatchlogs.InputLogEvent{
 			Message:   aws.String(jsonData),
@@ -89,9 +92,9 @@ func (repeater *CloudWatchJournalRepeater) WriteBatch(records []Record) error {
 	getNextToken := func() error {
 		limit := int64(1)
 		describeRequest := &cloudwatchlogs.DescribeLogStreamsInput{
-			LogGroupName:  &repeater.logGroupName,
+			LogGroupName:        &repeater.logGroupName,
 			LogStreamNamePrefix: &repeater.logStreamName,
-			Limit: &limit,
+			Limit:               &limit,
 		}
 		describeOutput, err := repeater.conn.DescribeLogStreams(describeRequest)
 
@@ -138,7 +141,7 @@ func (repeater *CloudWatchJournalRepeater) WriteBatch(records []Record) error {
 		}
 
 		request := &cloudwatchlogs.CreateLogGroupInput{
-			LogGroupName:  &repeater.logGroupName,
+			LogGroupName: &repeater.logGroupName,
 		}
 		_, err := repeater.conn.CreateLogGroup(request)
 		return err
@@ -209,7 +212,7 @@ func (repeater *CloudWatchJournalRepeater) WriteBatch(records []Record) error {
 		}
 
 	} else {
-		if (repeater.config.Debug) {
+		if repeater.config.Debug {
 			repeater.logger.Info.Println("SENT SUCCESSFULLY")
 		}
 	}

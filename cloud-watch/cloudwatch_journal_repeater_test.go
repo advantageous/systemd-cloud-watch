@@ -1,16 +1,14 @@
 package cloud_watch
 
 import (
+	"strings"
 	"testing"
 	"time"
-	"strings"
 )
 
 func TestRepeater(t *testing.T) {
 
 	config_data := `
-log_group="dcos-logstream-test"
-state_file="/var/lib/journald-cloudwatch-logs/state-test"
 log_priority=3
 debug=true
 local=true
@@ -33,9 +31,9 @@ log_group="test-group"
 		t.Fail()
 	}
 
-	records := []Record{
-		{Message:"Hello mom", TimeUsec:time.Now().Unix() * 1000},
-		{Message:"Hello dad", TimeUsec:time.Now().Unix() * 1000},
+	records := []*Record{
+		{Message: "Hello mom", TimeUsec: time.Now().Unix() * 1000},
+		{Message: "Hello dad", TimeUsec: time.Now().Unix() * 1000},
 	}
 	err = repeater.WriteBatch(records)
 

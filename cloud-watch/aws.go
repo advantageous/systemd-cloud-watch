@@ -1,25 +1,24 @@
 package cloud_watch
 
 import (
-	awsCredentials "github.com/aws/aws-sdk-go/aws/credentials"
-	awsSession "github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/aws"
+	awsCredentials "github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/credentials/ec2rolecreds"
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
-	"os"
+	awsSession "github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"os"
 	"strings"
 )
 
 var awsLogger = NewSimpleLogger("aws", nil)
-
 
 func NewAWSSession(cfg *Config) *awsSession.Session {
 
 	metaDataClient, session := getClient(cfg)
 	credentials := getCredentials(metaDataClient)
 
-	if credentials!=nil {
+	if credentials != nil {
 		awsConfig := &aws.Config{
 			Credentials: getCredentials(metaDataClient),
 			Region:      aws.String(getRegion(metaDataClient, cfg, session)),
@@ -28,8 +27,8 @@ func NewAWSSession(cfg *Config) *awsSession.Session {
 		return awsSession.New(awsConfig)
 	} else {
 		return awsSession.New(&aws.Config{
-			Region:      aws.String(getRegion(metaDataClient, cfg, session)),
-			MaxRetries:  aws.Int(3),
+			Region:     aws.String(getRegion(metaDataClient, cfg, session)),
+			MaxRetries: aws.Int(3),
 		})
 	}
 
@@ -75,12 +74,10 @@ func getRegion(client *ec2metadata.EC2Metadata, config *Config, session *awsSess
 			az = findAZ(client)
 			ip = findLocalIp(client)
 
-
 			name = findInstanceName(config.EC2InstanceId, config.AWSRegion, session)
 			config.LogStreamName = name + "-" + strings.Replace(ip, ".", "-", -1) + "-" + az
 			awsLogger.Info.Printf("LogStreamName was not set so using %s \n", config.LogStreamName)
 		}
-
 
 		return region
 	}
@@ -88,7 +85,6 @@ func getRegion(client *ec2metadata.EC2Metadata, config *Config, session *awsSess
 }
 func findLocalIp(metaClient *ec2metadata.EC2Metadata) string {
 	ip, err := metaClient.GetMetadata("local-ipv4")
-
 
 	if err != nil {
 		awsLogger.Error.Printf("Unable to get private ip address from aws meta client : %s %v", err.Error(), err)
@@ -101,7 +97,6 @@ func findLocalIp(metaClient *ec2metadata.EC2Metadata) string {
 
 func getCredentials(client *ec2metadata.EC2Metadata) *awsCredentials.Credentials {
 
-
 	if client == nil {
 		awsLogger.Info.Printf("Client missing credentials not looked up")
 		return nil
@@ -109,18 +104,16 @@ func getCredentials(client *ec2metadata.EC2Metadata) *awsCredentials.Credentials
 		return awsCredentials.NewChainCredentials([]awsCredentials.Provider{
 			&awsCredentials.EnvProvider{},
 			&ec2rolecreds.EC2RoleProvider{
-				Client:client,
+				Client: client,
 			},
 		})
 	}
 
 }
 
-func findAZ(metaClient *ec2metadata.EC2Metadata) (string) {
+func findAZ(metaClient *ec2metadata.EC2Metadata) string {
 
 	az, err := metaClient.GetMetadata("placement/availability-zone")
-
-
 
 	if err != nil {
 		awsLogger.Error.Printf("Unable to get az from aws meta client : %s %v", err.Error(), err)
@@ -130,7 +123,7 @@ func findAZ(metaClient *ec2metadata.EC2Metadata) (string) {
 	return az
 }
 
-func findInstanceName(instanceId string, region string, session *awsSession.Session) (string) {
+func findInstanceName(instanceId string, region string, session *awsSession.Session) string {
 
 	var name = "NO_NAME"
 	var err error
@@ -169,4 +162,3 @@ func findInstanceName(instanceId string, region string, session *awsSession.Sess
 		return name
 	}
 }
-

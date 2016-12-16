@@ -1,32 +1,32 @@
 package cloud_watch
 
 import (
-	"io/ioutil"
 	"github.com/hashicorp/hcl"
+	"io/ioutil"
 )
 
 type Config struct {
-	AWSRegion      string 	`hcl:"aws_region"`
-	EC2InstanceId  string 	`hcl:"ec2_instance_id"`
-	LogGroupName   string 	`hcl:"log_group"`
-	LogStreamName  string 	`hcl:"log_stream"`
-	LogPriority    string 	`hcl:"log_priority"`
-	JournalDir     string 	`hcl:"journal_dir"`
-	BufferSize     int    	`hcl:"buffer_size"`
-	Debug          bool    	`hcl:"debug"`
-	Tail           bool    	`hcl:"tail"`
-	Rewind         int	`hcl:"rewind"`
-	Local          bool	`hcl:"local"`
+	AWSRegion      string   `hcl:"aws_region"`
+	EC2InstanceId  string   `hcl:"ec2_instance_id"`
+	LogGroupName   string   `hcl:"log_group"`
+	LogStreamName  string   `hcl:"log_stream"`
+	LogPriority    string   `hcl:"log_priority"`
+	JournalDir     string   `hcl:"journal_dir"`
+	BufferSize     int      `hcl:"buffer_size"`
+	Debug          bool     `hcl:"debug"`
+	Tail           bool     `hcl:"tail"`
+	Rewind         int      `hcl:"rewind"`
+	Local          bool     `hcl:"local"`
 	AllowedFields  []string `hcl:"fields"`
 	OmitFields     []string `hcl:"omit_fields"`
 	logPriority    int
 	fields         map[string]struct{}
 	omitFields     map[string]struct{}
-	FieldLength    int    `hcl:"field_length"`
-	MockCloudWatch bool    `hcl:"mock-cloud-watch"`
+	FieldLength    int  `hcl:"field_length"`
+	MockCloudWatch bool `hcl:"mock-cloud-watch"`
 }
 
-func (config *Config) GetJournalDLogPriority() (Priority) {
+func (config *Config) GetJournalDLogPriority() Priority {
 
 	logLevels := map[Priority][]string{
 		EMERGENCY: {"0", "emerg"},

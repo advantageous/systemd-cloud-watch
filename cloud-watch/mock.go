@@ -1,33 +1,32 @@
 package cloud_watch
 
 import (
-	"time"
 	"sync/atomic"
+	"time"
 )
 
 type MockJournal interface {
 	Journal
 	SetCount(uint64)
-	SetError (error)
-
+	SetError(error)
 }
 
 type TestJournal struct {
-	values  map[string]string
-	logger  *Logger
-	count   int64
-	err     error
+	values map[string]string
+	logger *Logger
+	count  int64
+	err    error
 }
 
 type MockJournalRepeater struct {
-	logger  *Logger
+	logger *Logger
 }
 
 func (repeater *MockJournalRepeater) Close() error {
 	return nil
 }
 
-func (repeater *MockJournalRepeater) WriteBatch(records []Record) error {
+func (repeater *MockJournalRepeater) WriteBatch(records []*Record) error {
 
 	for _, record := range records {
 
@@ -69,11 +68,9 @@ func NewMockJournalRepeater() (repeater *MockJournalRepeater) {
 	return &MockJournalRepeater{NewSimpleLogger("mock-repeater", nil)}
 }
 
-
 func (journal *TestJournal) SetCount(count uint64) {
 
 	atomic.StoreInt64(&journal.count, int64(count))
-
 
 }
 
@@ -87,6 +84,7 @@ func NewJournalWithMap(values map[string]string) Journal {
 	return &TestJournal{
 		values: values,
 		logger: logger,
+		count:  113,
 	}
 }
 
@@ -95,23 +93,18 @@ func (journal *TestJournal) Close() error {
 	return nil
 }
 
-
 // Next advances the read pointer into the journal by one entry.
 func (journal *TestJournal) Next() (uint64, error) {
-	journal.logger.Info.Println("Next")
+	journal.logger.Debug.Println("Next")
 
-	var count uint64
+	var count = atomic.LoadInt64(&journal.count)
 
-	if (journal.count > 0) {
-		count = uint64(journal.count)
+	if count > 0 {
 		atomic.AddInt64(&journal.count, -1)
+		return uint64(1), nil
 	} else {
-		count = 0
+		return uint64(0), nil
 	}
-
-
-
-	return uint64(count), nil
 
 }
 
@@ -141,10 +134,9 @@ func (journal *TestJournal) GetDataValue(field string) (string, error) {
 	if journal.count < 0 {
 		panic("ARGH")
 	}
-	journal.logger.Info.Println("GetDataValue")
+	journal.logger.Debug.Println("GetDataValue")
 	return journal.values[field], nil
 }
-
 
 // GetRealtimeUsec gets the realtime (wallclock) timestamp of the current
 // journal entry.
@@ -168,7 +160,6 @@ func (journal *TestJournal) GetCursor() (string, error) {
 	journal.logger.Info.Println("GetCursor")
 	return "abc-123", nil
 }
-
 
 // SeekHead seeks to the beginning of the journal, i.e. the oldest available
 // entry.

@@ -1,8 +1,8 @@
 package main
 
 import (
-	jcw  "github.com/advantageous/systemd-cloud-watch/cloud-watch"
 	"flag"
+	jcw "github.com/advantageous/systemd-cloud-watch/cloud-watch"
 	"os"
 )
 
@@ -22,7 +22,8 @@ func main() {
 	configFilename := flag.Arg(0)
 	if configFilename == "" {
 		usage(logger)
-		panic("config file name must be set!")
+		println("config file name must be set!")
+		os.Exit(2)
 	}
 
 	config := jcw.CreateConfig(configFilename, logger)
@@ -30,11 +31,11 @@ func main() {
 	journal := jcw.CreateJournal(config, logger)
 	repeater := jcw.CreateRepeater(config, logger)
 
-	jcw.RunWorkers(journal, repeater, logger, config )
+	jcw.NewRunner(journal, repeater, logger, config)
+
 }
 
 func usage(logger *jcw.Logger) {
 	logger.Error.Println("Usage: systemd-cloud-watch  <config-file>")
 	flag.PrintDefaults()
 }
-

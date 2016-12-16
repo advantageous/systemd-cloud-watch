@@ -2,277 +2,207 @@ package cloud_watch
 
 import (
 	"fmt"
-	"time"
+	q "github.com/advantageous/go-qbit/qbit"
 	"os"
 	"os/signal"
 	"syscall"
-	//	"github.com/coreos/go-systemd/sdjournal"
+	"time"
 )
 
-func makeTerminateChannel() <-chan os.Signal {
-	ch := make(chan os.Signal, 1)
-	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
-	return ch
+type Runner struct {
+	records         []*Record
+	bufferSize      int
+	logger          *Logger
+	journalRepeater JournalRepeater
+	journal         Journal
+	batchCounter    uint64
+	idleCounter     uint64
+	emptyCounter    uint64
+	lastMetricTime  int64
+	queueManager    q.QueueManager
+	config          *Config
+	debug           bool
+	instanceId      string
 }
 
-func ReadOneRecord(journal Journal, outChannel chan <- Record, logger *Logger, config *Config,
-instanceId string) {
+func (r *Runner) Stop() {
+	r.queueManager.Stop()
+}
+func (r *Runner) addToCloudWatchBatch(record *Record) {
 
-	debug := config.Debug
+	r.records = append(r.records, record)
 
-	count, err := journal.Next()
-	if err != nil {
-
-		logger.Error.Printf("error reading from journal: %s %v", err.Error(), err)
-
-		outChannel <- newErrorRecord(instanceId,
-			fmt.Errorf("error reading from journal: : %s %v", err.Error(), err),
-		)
-		if debug {
-			logger.Info.Println("Waiting for two seconds after error")
-		}
-		time.Sleep(2 * time.Second)
-	} else if count <= 0 {
-		if debug {
-			logger.Info.Println("Waiting for two seconds")
-		}
-		journal.Wait(2 * time.Second)
-	} else if count > 0 {
-
-		if debug {
-			logger.Info.Println("No errors, reading log")
-		}
-
-		record, err := NewRecord(journal, logger, config)
-		record.InstanceId = instanceId
-
-		if err != nil {
-
-			if debug {
-				logger.Info.Println("Error reading record", record)
-			}
-
-			outChannel <- newErrorRecord(instanceId,
-				fmt.Errorf("error unmarshalling record: %s", err),
-			)
-		} else {
-
-			if debug {
-				logger.Info.Println("Read record", record)
-			}
-
-			outChannel <- *record
-		}
+	if len(r.records) >= r.bufferSize {
+		r.sendBatch()
 	}
-
 }
 
-func ReadRecords(journal Journal, outChannel chan <- Record, logger *Logger, config *Config) {
+func (r *Runner) sendBatch() {
+
+	if len(r.records) > 0 {
+		batchToSend := r.records
+		r.records = make([]*Record, 0)
+		err := r.journalRepeater.WriteBatch(batchToSend)
+		if err != nil {
+			r.logger.Error.Println("Failed to write to cloudwatch batch size = : %d %s %v",
+				len(r.records), err.Error(), err)
+		}
+
+	}
+}
+
+func NewRunnerInternal(journal Journal, repeater JournalRepeater, logger *Logger, config *Config, start bool) *Runner {
+
+	if repeater == nil {
+		panic("Repeater can't be nil")
+	}
+	r := &Runner{journal: journal,
+		journalRepeater: repeater,
+		logger:          logger,
+		config:          config,
+		debug:           config.Debug,
+		instanceId:      config.EC2InstanceId,
+		bufferSize:      config.BufferSize}
 
 	if logger == nil {
 		logger = NewSimpleLogger("record reader ", config)
 	}
 
-	termC := makeTerminateChannel()
-	instanceId := config.EC2InstanceId
+	r.queueManager = q.NewSimpleQueueManager(q.NewQueueListener(&q.QueueListener{
 
-	checkTerminate := func() bool {
-		select {
-		case <-termC:
-			close(outChannel)
-			return true
-		default:
-			return false
-		}
-	}
-
-	for {
-		if checkTerminate() {
-			logger.Error.Printf("OS signal terminated")
-			return
-		}
-		ReadOneRecord(journal, outChannel, logger, config, instanceId)
-	}
-}
-
-
-
-// BatchRecords consumes a channel of individual records and produces
-// a channel of slices of record pointers in sizes up to the given
-// batch size.
-// If records don't show up fast enough, smaller batches will be returned
-// each second as long as at least one item is in the buffer.
-func BatchRecords(inputRecordChannel <-chan Record, outputBatchRecords chan <- []Record, logger *Logger, config *Config) {
-
-	if logger == nil {
-		logger = NewSimpleLogger("batcher", config)
-	}
-
-	batchSize := config.BufferSize
-
-	// We have two buffers here so that we can fill one while the
-	// caller is working on the other. The caller is therefore
-	// guaranteed that the returned slice will remain valid until
-	// the next read of the batches channel.
-	var bufs [2][]Record
-	bufs[0] = make([]Record, batchSize)
-	bufs[1] = make([]Record, batchSize)
-	var record Record
-	var more bool
-	currentBuf := 0
-	countOfRecords := 0
-	timer := time.NewTimer(time.Second)
-	timer.Stop()
-
-	for {
-		select {
-		case record, more = <-inputRecordChannel:
-			if !more {
-				close(outputBatchRecords)
-				return
+		ReceiveFunc: func(item interface{}) {
+			r.addToCloudWatchBatch(item.(*Record))
+		},
+		EndBatchFunc: func() {
+			r.sendBatch()
+			r.batchCounter++
+		},
+		IdleFunc: func() {
+			r.sendBatch()
+			now := time.Now().Unix()
+			if now-r.lastMetricTime > 120 {
+				now = r.lastMetricTime
+				r.logger.Info.Printf("Systemd CloudWatch: batches sent %d, idleCount %d,  emptyCount %d",
+					r.batchCounter, r.idleCounter, r.emptyCounter)
 			}
-			bufs[currentBuf][countOfRecords] = record
-			countOfRecords++
-			if countOfRecords < batchSize {
-				// If we've just added our first record then we'll
-				// start the batch timer.
-				if countOfRecords == 1 {
-					timer.Reset(time.Second)
-				}
-				// Not enough records yet, so wait again.
-				continue
-			}
-			break
-		case <-timer.C:
-			break
+			r.idleCounter++
+		},
+		EmptyFunc: func() {
+			r.sendBatch()
+			r.emptyCounter++
+		},
+	}))
+
+	r.lastMetricTime = time.Now().Unix()
+	r.positionCursor()
+
+	if start {
+		signalChannel := r.makeTerminateChannel()
+
+		go func() {
+			<-signalChannel
+			r.queueManager.Stop()
+		}()
+
+		r.readRecords()
+	}
+
+	return r
+}
+func NewRunner(journal Journal, repeater JournalRepeater, logger *Logger, config *Config) *Runner {
+	return NewRunnerInternal(journal, repeater, logger, config, true)
+
+}
+
+func (r *Runner) makeTerminateChannel() <-chan os.Signal {
+	ch := make(chan os.Signal, 1)
+	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+	return ch
+}
+
+func (r *Runner) readOneRecord() (*Record, bool, error) {
+
+	count, err := r.journal.Next()
+	if err != nil {
+		return nil, false, err
+	} else if count > 0 {
+		if r.debug {
+			r.logger.Info.Println("No errors, reading log")
 		}
-
-		timer.Stop()
-		if countOfRecords == 0 {
-			continue
-		}
-
-		// If we manage to fall out here then either the buffer is full
-		// or the batch timer expired. Either way it's time for us to
-		// emit a batch.
-		outputBatchRecords <- bufs[currentBuf][0:countOfRecords]
-
-		// Switch buffers before we start building the next batch.
-		currentBuf = (currentBuf + 1) % 2
-		countOfRecords = 0
-	}
-}
-
-func newErrorRecord(instanceId string, err error) Record {
-	return Record{
-		InstanceId: instanceId,
-		Command:  "journald-cloudwatch-logs",
-		Priority: ERROR,
-		Message:  err.Error(),
-	}
-}
-
-func CreateConfig(configFilename string, logger *Logger) *Config {
-
-	config, err := LoadConfig(configFilename, logger)
-	if err != nil {
-		logger.Error.Println("Unable to load config", err, configFilename)
-		panic("Unable to create config")
-	}
-	return config
-}
-
-func CreateJournal(config *Config, logger *Logger) Journal {
-
-	journal, err := NewJournal(config)
-	if err != nil {
-		logger.Error.Println("Unable to load journal", err)
-		panic("Unable to create journal")
-	}
-	journal.AddLogFilters(config)
-	return journal
-
-}
-
-func CreateRepeater(config *Config, logger *Logger) JournalRepeater {
-
-	var repeater JournalRepeater
-	var err error
-
-	if !config.MockCloudWatch {
-		logger.Info.Println("Creating repeater that is conneting to AWS cloud watch")
-		session := NewAWSSession(config)
-		repeater, err = NewCloudWatchJournalRepeater(session, nil, config)
-
-	} else {
-		logger.Warning.Println("Creating MOCK repeater")
-		repeater = NewMockJournalRepeater()
-	}
-
-	if err != nil {
-		panic("Unable to create repeater " + err.Error())
-	}
-	return repeater
-
-}
-
-func positionCursor(journal Journal, logger *Logger, config *Config) {
-
-	if config.Tail {
-		err := journal.SeekTail()
+		record, err := NewRecord(r.journal, r.logger, r.config)
+		record.InstanceId = r.instanceId
 		if err != nil {
-			logger.Error.Println("Unable to seek to end of systemd journal", err)
+			return nil, false, fmt.Errorf("error unmarshalling record: %v", err)
+		}
+		if r.debug {
+			r.logger.Info.Println("Read record", record)
+		}
+		return record, true, nil
+	} else {
+
+		if r.debug {
+			r.logger.Info.Println("Waiting for two seconds")
+		}
+		r.journal.Wait(2 * time.Second)
+		return nil, false, nil
+	}
+
+}
+
+func (r *Runner) readRecords() {
+
+	sendQueue := r.queueManager.SendQueueWithAutoFlush(100 * time.Millisecond)
+
+	for {
+
+		record, isReadRecord, err := r.readOneRecord()
+
+		if err == nil && isReadRecord && record != nil {
+			sendQueue.Send(record)
+		}
+
+		if err != nil {
+			r.logger.Error.Println("Error reading record", err)
+		}
+
+		if !isReadRecord {
+			if r.queueManager.Stopped() {
+				r.logger.Info.Println("Got stop message")
+				break
+			}
+		}
+
+	}
+
+}
+
+func (r *Runner) positionCursor() {
+
+	if r.config.Tail {
+		err := r.journal.SeekTail()
+		if err != nil {
+			r.logger.Error.Println("Unable to seek to end of systemd journal", err)
 			panic("Unable to seek to end of systemd journal")
 		} else {
-			logger.Info.Println("Success: Seek to end of systemd journal")
+			r.logger.Info.Println("Success: Seek to end of systemd journal")
 		}
 
-		count, err := journal.PreviousSkip(uint64(config.Rewind))
+		count, err := r.journal.PreviousSkip(uint64(r.config.Rewind))
 		if err != nil {
-			logger.Error.Println("Unable to rewind after seeking to end of systemd journal", config.Rewind)
+			r.logger.Error.Println("Unable to rewind after seeking to end of systemd journal", r.config.Rewind)
 			panic("Unable to rewind systemd journal ")
 		} else {
-			logger.Info.Println("Success: Rewind", config.Rewind, count)
+			r.logger.Info.Println("Success: Rewind", r.config.Rewind, count)
 		}
 	} else {
-		err := journal.SeekHead()
+		err := r.journal.SeekHead()
 		if err != nil {
-			logger.Error.Println("Unable to seek to head of systemd journal", err)
+			r.logger.Error.Println("Unable to seek to head of systemd journal", err)
 			panic("Unable to seek to end of systemd journal")
 		} else {
-			logger.Info.Println("Success: Seek to head of systemd journal")
+			r.logger.Info.Println("Success: Seek to head of systemd journal")
 		}
 
 	}
 
-}
-
-func RunWorkers(journal Journal, repeater JournalRepeater, logger *Logger, config *Config) {
-
-	logger.Info.Println("Starting up systemd cloudwatch")
-
-	defer journal.Close()
-	defer logger.Info.Println("Leaving RunWorkers method")
-
-	positionCursor(journal, logger, config)
-
-	records := make(chan Record)
-	batches := make(chan []Record)
-
-	go ReadRecords(journal, records, nil, config)
-	go BatchRecords(records, batches, nil, config)
-
-	for batch := range batches {
-		if (config.Debug) {
-			logger.Info.Printf("Writing records %d", len(batch))
-		}
-		err := repeater.WriteBatch(batch)
-		if err != nil {
-
-			for _,item := range batch {
-				logger.Error.Println("Unable to write batch item %+v", item)
-			}
-			logger.Error.Println("Failed to write to cloudwatch batch size = : %d %s %v", len(batch), err.Error(), err)
-		}
-	}
 }
