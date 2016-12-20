@@ -3,6 +3,7 @@ package cloud_watch
 import (
 	"sync/atomic"
 	"time"
+	lg "github.com/advantageous/go-logback/logging"
 )
 
 type MockJournal interface {
@@ -13,13 +14,13 @@ type MockJournal interface {
 
 type TestJournal struct {
 	values map[string]string
-	logger *Logger
+	logger lg.Logger
 	count  int64
 	err    error
 }
 
 type MockJournalRepeater struct {
-	logger *Logger
+	logger lg.Logger
 }
 
 func (repeater *MockJournalRepeater) Close() error {
@@ -35,28 +36,28 @@ func (repeater *MockJournalRepeater) WriteBatch(records []*Record) error {
 		switch record.Priority {
 
 		case EMERGENCY:
-			repeater.logger.Error.Println(priority, "------", record.Message)
+			repeater.logger.Error(priority, "------", record.Message)
 		case ALERT:
-			repeater.logger.Error.Println(priority, "------", record.Message)
+			repeater.logger.Error(priority, "------", record.Message)
 
 		case CRITICAL:
-			repeater.logger.Error.Println(priority, "------", record.Message)
+			repeater.logger.Error(priority, "------", record.Message)
 		case ERROR:
-			repeater.logger.Error.Println(priority, "------", record.Message)
+			repeater.logger.Error(priority, "------", record.Message)
 		case NOTICE:
-			repeater.logger.Warning.Println(priority, "------", record.Message)
+			repeater.logger.Warn(priority, "------", record.Message)
 
 		case WARNING:
-			repeater.logger.Warning.Println(priority, "------", record.Message)
+			repeater.logger.Warn(priority, "------", record.Message)
 
 		case INFO:
-			repeater.logger.Info.Println(priority, "------", record.Message)
+			repeater.logger.Info(priority, "------", record.Message)
 
 		case DEBUG:
-			repeater.logger.Debug.Println(priority, "------", record.Message)
+			repeater.logger.Debug(priority, "------", record.Message)
 
 		default:
-			repeater.logger.Debug.Println("?????", priority, "------", record.Message)
+			repeater.logger.Debug("?????", priority, "------", record.Message)
 
 		}
 
@@ -65,7 +66,7 @@ func (repeater *MockJournalRepeater) WriteBatch(records []*Record) error {
 }
 
 func NewMockJournalRepeater() (repeater *MockJournalRepeater) {
-	return &MockJournalRepeater{NewSimpleLogger("mock-repeater", nil)}
+	return &MockJournalRepeater{lg.NewSimpleLogger("mock-repeater")}
 }
 
 func (journal *TestJournal) SetCount(count uint64) {
@@ -80,7 +81,7 @@ func (journal *TestJournal) SetError(err error) {
 }
 
 func NewJournalWithMap(values map[string]string) Journal {
-	logger := NewSimpleLogger("test-journal", nil)
+	logger := lg.NewSimpleLogger("test-journal")
 	return &TestJournal{
 		values: values,
 		logger: logger,
@@ -89,13 +90,13 @@ func NewJournalWithMap(values map[string]string) Journal {
 }
 
 func (journal *TestJournal) Close() error {
-	journal.logger.Info.Println("Close")
+	journal.logger.Info("Close")
 	return nil
 }
 
 // Next advances the read pointer into the journal by one entry.
 func (journal *TestJournal) Next() (uint64, error) {
-	journal.logger.Debug.Println("Next")
+	journal.logger.Debug("Next")
 
 	var count = atomic.LoadInt64(&journal.count)
 
@@ -111,20 +112,20 @@ func (journal *TestJournal) Next() (uint64, error) {
 // NextSkip advances the read pointer by multiple entries at once,
 // as specified by the skip parameter.
 func (journal *TestJournal) NextSkip(skip uint64) (uint64, error) {
-	journal.logger.Info.Println("Next Skip")
+	journal.logger.Info("Next Skip")
 	return uint64(journal.count), nil
 }
 
 // Previous sets the read pointer into the journal back by one entry.
 func (journal *TestJournal) Previous() (uint64, error) {
-	journal.logger.Info.Println("Previous")
+	journal.logger.Info("Previous")
 	return uint64(journal.count), nil
 }
 
 // PreviousSkip sets back the read pointer by multiple entries at once,
 // as specified by the skip parameter.
 func (journal *TestJournal) PreviousSkip(skip uint64) (uint64, error) {
-	journal.logger.Info.Println("Previous Skip")
+	journal.logger.Info("Previous Skip")
 	return uint64(journal.count), nil
 }
 
@@ -134,30 +135,30 @@ func (journal *TestJournal) GetDataValue(field string) (string, error) {
 	if journal.count < 0 {
 		panic("ARGH")
 	}
-	journal.logger.Debug.Println("GetDataValue")
+	journal.logger.Debug("GetDataValue")
 	return journal.values[field], nil
 }
 
 // GetRealtimeUsec gets the realtime (wallclock) timestamp of the current
 // journal entry.
 func (journal *TestJournal) GetRealtimeUsec() (uint64, error) {
-	journal.logger.Info.Println("GetRealtimeUsec")
+	journal.logger.Info("GetRealtimeUsec")
 	return 1480549576015541 / 1000, nil
 }
 
 func (journal *TestJournal) AddLogFilters(config *Config) {
-	journal.logger.Info.Println("AddLogFilters")
+	journal.logger.Info("AddLogFilters")
 }
 
 // GetMonotonicUsec gets the monotonic timestamp of the current journal entry.
 func (journal *TestJournal) GetMonotonicUsec() (uint64, error) {
-	journal.logger.Info.Println("GetMonotonicUsec")
+	journal.logger.Info("GetMonotonicUsec")
 	return uint64(journal.count), nil
 }
 
 // GetCursor gets the cursor of the current journal entry.
 func (journal *TestJournal) GetCursor() (string, error) {
-	journal.logger.Info.Println("GetCursor")
+	journal.logger.Info("GetCursor")
 	return "abc-123", nil
 }
 

@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"strconv"
 	"time"
-	//	"encoding/json"
+	lg "github.com/advantageous/go-logback/logging"
 )
 
 type Priority int
@@ -59,7 +59,7 @@ type Record struct {
 	DevNode     string   `json:"kernelDevNode,omitempty" journald:"_UDEV_DEVNODE"`
 }
 
-func NewRecord(journal Journal, logger *Logger, config *Config) (*Record, error) {
+func NewRecord(journal Journal, logger lg.Logger, config *Config) (*Record, error) {
 	record := &Record{}
 
 	err := decodeRecord(journal, reflect.ValueOf(record).Elem(), logger, config)
@@ -68,7 +68,7 @@ func NewRecord(journal Journal, logger *Logger, config *Config) (*Record, error)
 
 		timestamp, err := journal.GetRealtimeUsec()
 		if err != nil {
-			logger.Error.Printf("Unable to read the time : %s %v", err.Error(), err)
+			logger.Errorf("Unable to read the time : %s %v", err.Error(), err)
 			record.TimeUsec = time.Now().Unix() * 1000
 		} else {
 			record.TimeUsec = int64(timestamp / 1000)
@@ -78,7 +78,7 @@ func NewRecord(journal Journal, logger *Logger, config *Config) (*Record, error)
 	return record, err
 }
 
-func decodeRecord(journal Journal, toVal reflect.Value, logger *Logger, config *Config) error {
+func decodeRecord(journal Journal, toVal reflect.Value, logger lg.Logger, config *Config) error {
 	toType := toVal.Type()
 
 	numField := toVal.NumField()
@@ -109,7 +109,7 @@ func decodeRecord(journal Journal, toVal reflect.Value, logger *Logger, config *
 		case reflect.Int:
 			intVal, err := strconv.Atoi(value)
 			if err != nil {
-				logger.Warning.Printf("Can't convert field %s to int", jdKey)
+				logger.Warnf("Can't convert field %s to int", jdKey)
 				fieldVal.Set(reflect.Zero(fieldType))
 				continue
 			}
@@ -123,7 +123,7 @@ func decodeRecord(journal Journal, toVal reflect.Value, logger *Logger, config *
 		case reflect.Int64:
 			u, err := strconv.ParseInt(value, 10, 64)
 			if err != nil {
-				logger.Warning.Printf("Can't convert field %s to int64", jdKey)
+				logger.Warnf("Can't convert field %s to int64", jdKey)
 				fieldVal.Set(reflect.Zero(fieldType))
 				continue
 			}
@@ -131,7 +131,7 @@ func decodeRecord(journal Journal, toVal reflect.Value, logger *Logger, config *
 			break
 
 		default:
-			logger.Warning.Printf("Can't convert field %s unsupported type %s", jdKey, fieldTypeKind)
+			logger.Warnf("Can't convert field %s unsupported type %s", jdKey, fieldTypeKind)
 		}
 	}
 

@@ -3,6 +3,7 @@ package cloud_watch
 import (
 	"github.com/hashicorp/hcl"
 	"io/ioutil"
+	lg "github.com/advantageous/go-logback/logging"
 )
 
 type Config struct {
@@ -63,8 +64,8 @@ func (config *Config) AllowField(fieldName string) bool {
 		_, omitField := config.omitFields[fieldName]
 		return !omitField
 	} else {
-		logger := NewSimpleLogger("allow-field", config)
-		logger.Warning.Println("Only fields or omit_fields should be set")
+		logger := lg.NewSimpleLogger("SYSTEMD_CONFIG_DEBUG")
+		logger.Warn("Only fields or omit_fields should be set")
 		_, omitField := config.omitFields[fieldName]
 		if omitField {
 			return !omitField
@@ -86,13 +87,14 @@ func arrayToMap(array []string) map[string]struct{} {
 	return theMap
 }
 
-func LoadConfigFromString(data string, logger *Logger) (*Config, error) {
+func LoadConfigFromString(data string, logger lg.Logger) (*Config, error) {
 
 	if logger == nil {
-		logger = NewSimpleLogger("config", nil)
+		logger = lg.NewSimpleLogger("SYSTEMD_CONFIG_DEBUG")
 	}
 	config := &Config{}
-	logger.Debug.Println("Loading log...")
+
+	logger.Debug("Loading log...")
 	err := hcl.Decode(&config, data)
 	if err != nil {
 		return nil, err
@@ -101,43 +103,43 @@ func LoadConfigFromString(data string, logger *Logger) (*Config, error) {
 	config.omitFields = arrayToMap(config.OmitFields)
 
 	if config.CloudWatchBufferSize == 0 {
-		logger.Debug.Println("Loading log... cloud watch BufferSize not set, setting to 50")
+		logger.Debug("Loading log... cloud watch BufferSize not set, setting to 50")
 		config.CloudWatchBufferSize = 50
 	}
 
 	if config.QueueChannelSize == 0 {
-		logger.Debug.Println("Loading log... Queue Channel Size not set, setting to 3")
+		logger.Debug("Loading log... Queue Channel Size not set, setting to 3")
 		config.QueueChannelSize = 3
 	}
 
 	if config.QueueBatchSize == 0 {
-		logger.Debug.Println("Loading log... Queue Batch Size not set, setting to 10000")
+		logger.Debug("Loading log... Queue Batch Size not set, setting to 10000")
 		config.QueueBatchSize = 10000
 	}
 
 	if config.FlushLogEntries == 0 {
-		logger.Debug.Println("Loading log... Flush JournalD log entries not set, setting to 100 ms")
+		logger.Debug("Loading log... Flush JournalD log entries not set, setting to 100 ms")
 		config.FlushLogEntries = 100
 	}
 
 	if config.QueuePollDurationMS == 0 {
-		logger.Debug.Println("Loading log... Queue Poll Duration MS not set, setting to 10 ms")
+		logger.Debug("Loading log... Queue Poll Duration MS not set, setting to 10 ms")
 		config.QueuePollDurationMS = 10
 	}
 
 	if config.FieldLength == 0 {
-		logger.Debug.Println("Loading log... FieldLength not set, setting to 255")
+		logger.Debug("Loading log... FieldLength not set, setting to 255")
 		config.FieldLength = 255
 	}
 
 	if config.LogPriority == "" {
-		logger.Debug.Println("Loading log... LogPriority not set, setting to debug")
+		logger.Debug("Loading log... LogPriority not set, setting to debug")
 		config.LogPriority = "debug"
 	}
 
 	if config.Tail {
 		if config.Rewind == 0 {
-			logger.Debug.Println("Loading log... Rewind not set, but Tail is so setting to 10")
+			logger.Debug("Loading log... Rewind not set, but Tail is so setting to 10")
 			config.Rewind = 10
 		}
 	}
@@ -145,8 +147,8 @@ func LoadConfigFromString(data string, logger *Logger) (*Config, error) {
 	return config, nil
 
 }
-func LoadConfig(filename string, logger *Logger) (*Config, error) {
-	logger.Info.Printf("Loading config %s", filename)
+func LoadConfig(filename string, logger lg.Logger) (*Config, error) {
+	logger.Printf("Loading config %s", filename)
 
 	configBytes, err := ioutil.ReadFile(filename)
 	if err != nil {
