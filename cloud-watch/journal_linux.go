@@ -52,6 +52,12 @@ func (journal *SdJournal) AddLogFilters(config *Config) {
 		}
 		journal.journal.AddDisjunction()
 	}
+	// Add other Filters
+	if config.Filters != nil && len(config.Filters) > 0 {
+		for _, filter := range config.Filters {
+			journal.journal.AddMatch(filter)
+		}
+	}
 }
 
 func (journal *SdJournal) Close() error {
