@@ -4,17 +4,18 @@ import (
 	"github.com/coreos/go-systemd/sdjournal"
 	"strconv"
 	"time"
+	lg "github.com/advantageous/go-logback/logging"
 )
 
 type SdJournal struct {
 	journal *sdjournal.Journal
-	logger  *Logger
+	logger  lg.Logger
 	debug   bool
 }
 
 func NewJournal(config *Config) (Journal, error) {
 
-	logger := NewSimpleLogger("journal", config)
+	logger := lg.NewSimpleLogger("journal")
 
 	var debug bool
 
@@ -30,7 +31,7 @@ func NewJournal(config *Config) (Journal, error) {
 			journal, logger, debug,
 		}, err
 	} else {
-		logger.Info.Printf("using journal dir: %s", config.JournalDir)
+		logger.Infof("using journal dir: %s", config.JournalDir)
 		journal, err := sdjournal.NewJournalFromDir(config.JournalDir)
 
 		return &SdJournal{
@@ -51,6 +52,12 @@ func (journal *SdJournal) AddLogFilters(config *Config) {
 		}
 		journal.journal.AddDisjunction()
 	}
+	// Add other Filters
+	if config.Filters != nil && len(config.Filters) > 0 {
+		for _, filter := range config.Filters {
+			journal.journal.AddMatch(filter)
+		}
+	}
 }
 
 func (journal *SdJournal) Close() error {
@@ -61,7 +68,7 @@ func (journal *SdJournal) Close() error {
 func (journal *SdJournal) Next() (uint64, error) {
 	loc, err := journal.journal.Next()
 	if journal.debug {
-		journal.logger.Info.Printf("NEXT location %d %v", loc, err)
+		journal.logger.Infof("NEXT location %d %v", loc, err)
 	}
 
 	return loc, err

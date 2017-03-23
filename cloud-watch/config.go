@@ -22,6 +22,7 @@ type Config struct {
 	Tail                 bool     `hcl:"tail"`
 	Rewind               int      `hcl:"rewind"`
 	Local                bool     `hcl:"local"`
+	Filters              []string `hcl:"filters"`
 	AllowedFields        []string `hcl:"fields"`
 	OmitFields           []string `hcl:"omit_fields"`
 	logPriority          int
