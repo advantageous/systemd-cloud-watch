@@ -87,8 +87,7 @@ The following configuration settings are supported:
   useful in conjunction with remote log aggregation, to work with journals synced from other systems.
   The default is to use the local system's journal.
 
-* `log_group`: (Required) The name of the cloudwatch log group to write logs into. This log group must
-  be created before running the program.
+* `log_group`: (Required) The name of the cloudwatch log group to write logs into.
 
 * `log_priority`: (Optional) The highest priority of the log messages to read (on a 0-7 scale). This defaults
     to DEBUG (all messages). This has a behaviour similar to `journalctl -p <priority>`. At the moment, only
@@ -99,9 +98,10 @@ The following configuration settings are supported:
     https://www.freedesktop.org/software/systemd/man/journalctl.html
 
 * `log_stream`: (Optional) The name of the cloudwatch log stream to write logs into. This defaults to
-  the EC2 instance id. Each running instance of this application (along with any other applications
-  writing logs into the same log group) must have a unique `log_stream` value. If the given log stream
-  doesn't exist then it will be created before writing the first set of journal events.
+  the EC2 instance name joined with the hostname and region. Each running instance of this application
+  (along with any other applications writing logs into the same log group) must have a unique `log_stream`
+  value. If the given log stream doesn't exist then it will be created before writing the first set of
+  journal events.
 
 * `buffer_size`: (Optional) The size of the event buffer to send to CloudWatch Logs API. The default is 50.
  This means that cloud watch will send 50 logs at a time. 
@@ -163,6 +163,16 @@ The following IAM policy grants the required access across all log groups in all
         {
             "Effect": "Allow",
             "Action": [
+                "ec2:DescribeInstances"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "logs:CreateLogGroup",
                 "logs:CreateLogStream",
                 "logs:PutLogEvents",
                 "logs:DescribeLogStreams"
