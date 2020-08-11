@@ -101,6 +101,9 @@ func (repeater *CloudWatchJournalRepeater) WriteBatch(records []*Record) error {
 		}
 
 		if len(describeOutput.LogStreams) > 0 {
+			if describeOutput.LogStreams[0].UploadSequenceToken == nil {
+				return nil
+			}
 			repeater.nextSequenceToken =
 				*describeOutput.LogStreams[0].UploadSequenceToken
 
