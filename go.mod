@@ -1,4 +1,4 @@
-module github.com/krestivo-kdinfotech/systemd-cloud-watch
+module github.com/backhub/systemd-cloud-watch
 
 require (
 	github.com/advantageous/go-logback v0.0.0-20161215180304-6db19679ca3e // indirect
