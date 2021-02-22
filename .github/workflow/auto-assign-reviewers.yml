@@ -1,0 +1,15 @@
+name: "Auto Assign"
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  assign:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Assign PR Reviewers
+      id: assign-reviewers
+      uses: rewindio/auto-assign-reviewer-by-issuer@master
+      with:
+        config: ${{ secrets.PR_REVIEWERS_CONFIG_FILE_URL }}
+        token: ${{ secrets.GITHUB_TOKEN }}
