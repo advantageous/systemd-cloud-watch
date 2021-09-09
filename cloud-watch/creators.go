@@ -30,7 +30,7 @@ func CreateRepeater(config *Config, logger lg.Logger) JournalRepeater {
 	var err error
 
 	if !config.MockCloudWatch {
-		logger.Info("Creating repeater that is conneting to AWS cloud watch")
+		logger.Info("Creating repeater that is connecting to AWS cloud watch")
 		session := NewAWSSession(config)
 		repeater, err = NewCloudWatchJournalRepeater(session, nil, config)
 
